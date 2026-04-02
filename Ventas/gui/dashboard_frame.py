@@ -29,19 +29,19 @@ class DashboardFrame(tb.Frame):
         self.card_ventas = self.crear_tarjeta(self.tarjetas, "Ventas totales", "$0.00", "primary")
         self.card_ventas.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        self.card_cobrado = self.crear_tarjeta(self.tarjetas, "Total cobrado", "$0.00", "success")
+        self.card_cobrado = self.crear_tarjeta(self.tarjetas, "Total cobrado", "$0.00", "info")
         self.card_cobrado.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
         self.card_saldo = self.crear_tarjeta(self.tarjetas, "Saldo pendiente", "$0.00", "danger")
         self.card_saldo.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
 
-        self.card_pagadas = self.crear_tarjeta(self.tarjetas, "Ventas pagadas", "0", "info")
+        self.card_pagadas = self.crear_tarjeta(self.tarjetas, "Ventas pagadas", "0", "success")
         self.card_pagadas.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         self.card_abonadas = self.crear_tarjeta(self.tarjetas, "Ventas abonadas", "0", "warning")
         self.card_abonadas.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
 
-        self.card_pendientes = self.crear_tarjeta(self.tarjetas, "Ventas pendientes", "0", "secondary")
+        self.card_pendientes = self.crear_tarjeta(self.tarjetas, "Ventas pendientes", "0", "danger")
         self.card_pendientes.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
 
         self.actualizar_datos()

@@ -86,7 +86,14 @@ class PagoFrame(tb.Frame):
         self.lbl_saldo = tb.Label(marco, text="Saldo pendiente: $0.00", font=("Segoe UI", 11, "bold"))
         self.lbl_saldo.grid(row=0, column=2, sticky=W, padx=10)
 
-        self.lbl_estado = tb.Label(marco, text="Estado: PENDIENTE", font=("Segoe UI", 11, "bold"))
+        #self.lbl_estado = tb.Label(marco, text="Estado: PENDIENTE", font=("Segoe UI", 11, "bold"))
+        #self.lbl_estado.grid(row=0, column=3, sticky=W, padx=10)
+        self.lbl_estado = tb.Label(
+            marco,
+            text="Estado: PENDIENTE",
+            font=("Segoe UI", 11, "bold"),
+            bootstyle="danger"
+        )
         self.lbl_estado.grid(row=0, column=3, sticky=W, padx=10)
 
     def crear_tabla(self):
@@ -199,7 +206,7 @@ class PagoFrame(tb.Frame):
             self.lbl_total_venta.config(text="Total venta: $0.00")
             self.lbl_total_pagado.config(text="Total pagado: $0.00")
             self.lbl_saldo.config(text="Saldo pendiente: $0.00")
-            self.lbl_estado.config(text="Estado: PENDIENTE")
+            self.aplicar_estilo_estado("PENDIENTE")
             return
 
         total_venta = obtener_total_venta(id_venta) or 0
@@ -210,7 +217,7 @@ class PagoFrame(tb.Frame):
         self.lbl_total_venta.config(text=f"Total venta: ${total_venta:.2f}")
         self.lbl_total_pagado.config(text=f"Total pagado: ${total_pagado:.2f}")
         self.lbl_saldo.config(text=f"Saldo pendiente: ${saldo_pendiente:.2f}")
-        self.lbl_estado.config(text=f"Estado: {estado}")
+        self.aplicar_estilo_estado(estado)
 
     def cambio_venta(self, event):
         self.id_pago_seleccionado = None
@@ -277,3 +284,11 @@ class PagoFrame(tb.Frame):
         hoy = date.today().strftime("%Y-%m-%d")
         self.entry_fecha.delete(0, END)
         self.entry_fecha.insert(0, hoy)
+    
+    def aplicar_estilo_estado(self, estado):
+        if estado == "PAGADA":
+            self.lbl_estado.config(text=f"Estado: {estado}", bootstyle="success")
+        elif estado == "ABONADA":
+            self.lbl_estado.config(text=f"Estado: {estado}", bootstyle="warning")
+        else:
+            self.lbl_estado.config(text=f"Estado: {estado}", bootstyle="danger")
