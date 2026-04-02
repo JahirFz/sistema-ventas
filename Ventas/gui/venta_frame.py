@@ -10,7 +10,7 @@ from controllers.venta_controller import (
     eliminar_venta
 )
 from controllers.cliente_controller import listar_clientes
-
+from controllers.pago_controller import obtener_estado_venta
 
 class VentaFrame(tb.Frame):
     def __init__(self, parent):
@@ -88,7 +88,7 @@ class VentaFrame(tb.Frame):
         marco_tabla = tb.Frame(self)
         marco_tabla.grid(row=1, column=0, sticky="nsew")
 
-        columnas = ("id_venta", "fecha", "cliente", "factura", "total")
+        columnas = ("id_venta", "fecha", "cliente", "factura", "total", "estado")
 
         self.tabla = ttk.Treeview(
             marco_tabla,
@@ -102,12 +102,14 @@ class VentaFrame(tb.Frame):
         self.tabla.heading("cliente", text="Cliente")
         self.tabla.heading("factura", text="Factura")
         self.tabla.heading("total", text="Total")
+        self.tabla.heading("estado", text="Estado")
 
         self.tabla.column("id_venta", width=70, anchor=CENTER)
         self.tabla.column("fecha", width=120, anchor=CENTER)
         self.tabla.column("cliente", width=300, anchor=W)
         self.tabla.column("factura", width=100, anchor=CENTER)
         self.tabla.column("total", width=120, anchor=E)
+        self.tabla.column("estado", width=120, anchor=CENTER)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)
@@ -119,6 +121,10 @@ class VentaFrame(tb.Frame):
         marco_tabla.grid_columnconfigure(0, weight=1)
 
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_venta)
+
+        self.tabla.tag_configure("pagada", background="#d1f7d6")
+        self.tabla.tag_configure("abonada", background="#fff3cd")
+        self.tabla.tag_configure("pendiente", background="#f8d7da")
 
         botones = tb.Frame(self)
         botones.grid(row=2, column=0, sticky=W, pady=(10, 0))
@@ -152,7 +158,16 @@ class VentaFrame(tb.Frame):
         ventas = listar_ventas()
 
         for venta in ventas:
+            id_venta = venta[0]
             factura_texto = "Sí" if venta[4] == 1 else "No"
+            estado = obtener_estado_venta(id_venta)
+
+            if estado == "PAGADA":
+                tag = "pagada"
+            elif estado == "ABONADA":
+                tag = "abonada"
+            else:
+                tag = "pendiente"
 
             self.tabla.insert(
                 "",
@@ -162,8 +177,10 @@ class VentaFrame(tb.Frame):
                     venta[1],
                     venta[3],
                     factura_texto,
-                    f"${venta[5]:.2f}"
-                )
+                    f"${venta[5]:.2f}",
+                    estado
+                ),
+                tags=(tag,)
             )
 
     def guardar_venta(self):
