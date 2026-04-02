@@ -1,6 +1,7 @@
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from tkinter import ttk, messagebox
+from datetime import date
 
 from controllers.venta_controller import listar_ventas
 from controllers.pago_controller import (
@@ -28,6 +29,7 @@ class PagoFrame(tb.Frame):
         self.crear_resumen()
         self.crear_tabla()
         self.actualizar_datos()
+        self.colocar_fecha_hoy()
 
     def crear_formulario(self):
         contenedor = tb.Frame(self)
@@ -135,6 +137,9 @@ class PagoFrame(tb.Frame):
         self.cargar_ventas()
         self.cargar_pagos_actuales()
         self.actualizar_resumen()
+
+        if self.id_pago_seleccionado is None:
+            self.colocar_fecha_hoy()
 
     def cargar_ventas(self):
         ventas = listar_ventas()
@@ -266,3 +271,9 @@ class PagoFrame(tb.Frame):
         self.entry_monto.delete(0, END)
         self.entry_metodo.delete(0, END)
         self.tabla.selection_remove(self.tabla.selection())
+        self.colocar_fecha_hoy()
+
+    def colocar_fecha_hoy(self):
+        hoy = date.today().strftime("%Y-%m-%d")
+        self.entry_fecha.delete(0, END)
+        self.entry_fecha.insert(0, hoy)

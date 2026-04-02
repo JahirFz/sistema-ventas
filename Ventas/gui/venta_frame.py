@@ -1,6 +1,7 @@
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from tkinter import ttk, messagebox
+from datetime import date
 
 from controllers.venta_controller import (
     agregar_venta,
@@ -25,10 +26,14 @@ class VentaFrame(tb.Frame):
         self.crear_tabla()
         self.cargar_clientes()
         self.cargar_ventas()
+        self.colocar_fecha_hoy()
 
     def actualizar_datos(self):
         self.cargar_clientes()
         self.cargar_ventas()
+
+        if self.id_venta_seleccionada is None:
+            self.colocar_fecha_hoy()
         
     def crear_formulario(self):
         contenedor = tb.Frame(self)
@@ -253,3 +258,9 @@ class VentaFrame(tb.Frame):
         self.combo_clientes.set("")
         self.var_factura.set(0)
         self.tabla.selection_remove(self.tabla.selection())
+        self.colocar_fecha_hoy()
+
+    def colocar_fecha_hoy(self):
+        hoy = date.today().strftime("%Y-%m-%d")
+        self.entry_fecha.delete(0, END)
+        self.entry_fecha.insert(0,hoy)
