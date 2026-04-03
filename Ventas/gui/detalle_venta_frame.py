@@ -10,7 +10,7 @@ from controllers.detalle_venta_controller import (
     eliminar_detalle_venta
 )
 from controllers.venta_controller import listar_ventas, buscar_venta_por_id
-
+from controllers.pago_controller import obtener_estado_venta
 
 class DetalleVentaFrame(tb.Frame):
     def __init__(self, parent):
@@ -240,6 +240,11 @@ class DetalleVentaFrame(tb.Frame):
         self.cargar_detalle_actual()
 
     def guardar_detalle(self):
+        estado = obtener_estado_venta(id_venta)
+        if estado == "PAGADA":
+            messagebox.showwarning("Aviso", "No puedes modificar una venta que ya esta pagada")
+            return
+
         id_venta = self.obtener_id_venta_actual()
         producto_seleccionado = self.combo_productos.get().strip()
         cantidad = self.entry_cantidad.get().strip()
@@ -272,6 +277,14 @@ class DetalleVentaFrame(tb.Frame):
         self.id_detalle_seleccionado = int(valores[0])
 
     def borrar_detalle(self):
+
+        id_venta = self.obtener_id_venta_actual()
+        estado = obtener_estado_venta(id_venta)
+
+        if estado == "PAGADA":
+            messagebox.showwarning("Aviso", "No puedes modificar una venta que ya esta pagada")
+            return
+        
         if self.id_detalle_seleccionado is None:
             messagebox.showwarning("Aviso", "Selecciona un detalle primero.")
             return
