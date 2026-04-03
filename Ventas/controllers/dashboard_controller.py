@@ -68,3 +68,7 @@ def obtener_conteo_estados():
         "abonadas": abonadas,
         "pendientes": pendientes
     }
+
+def hacer_backup(self):
+    ruta = crear_backup()
+    messagebox.showinfo("Backup", f"Respaldo creado en:\n{ruta}")

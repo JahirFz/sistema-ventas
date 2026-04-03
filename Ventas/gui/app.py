@@ -7,6 +7,7 @@ from gui.producto_frame import ProductoFrame
 from gui.venta_frame import VentaFrame
 from gui.detalle_venta_frame import DetalleVentaFrame
 from gui.pago_frame import PagoFrame
+from controllers.backup_controller import crear_backup
 
 
 class App(tb.Window):
@@ -33,6 +34,8 @@ class App(tb.Window):
         self.crear_frames()
         self.cambiar_vista("dashboard")
 
+        self.protocol("WM_DELETE_WINDOW", self.al_cerrar)
+
     def crear_frames(self):
         self.frames["dashboard"] = DashboardFrame(self.contenedor)
         self.frames["clientes"] = ClienteFrame(self.contenedor)
@@ -50,3 +53,11 @@ class App(tb.Window):
         if hasattr(frame, "actualizar_datos"):
             frame.actualizar_datos()
         frame.tkraise()
+
+    def al_cerrar(self):
+        exito, resultado = crear_backup()
+
+        if not exito:
+            print(f"Error al crear backup al cerrar: {resultado}")
+
+        self.destroy()

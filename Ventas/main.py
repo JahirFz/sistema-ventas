@@ -8,7 +8,6 @@ from config.database import (
 )
 from gui.app import App
 
-
 def inicializar_sistema():
     if not os.path.exists("database"):
         os.makedirs("database")
