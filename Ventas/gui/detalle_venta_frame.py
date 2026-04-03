@@ -201,7 +201,9 @@ class DetalleVentaFrame(tb.Frame):
         id_venta = self.obtener_id_venta_actual()
 
         if id_venta is None:
-            self.lbl_total.config(text="Total de la venta: $0.00")
+            self.lbl_subtotal.config(text="Subtotal de productos: $0.00")
+            self.lbl_iva.config(text="IVA: $0.00")
+            self.lbl_total_final.config(text="Total final: $0.00")
             return
 
         detalles = listar_detalle_por_venta(id_venta)
