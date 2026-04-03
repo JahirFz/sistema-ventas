@@ -240,10 +240,6 @@ class DetalleVentaFrame(tb.Frame):
         self.cargar_detalle_actual()
 
     def guardar_detalle(self):
-        estado = obtener_estado_venta(id_venta)
-        if estado == "PAGADA":
-            messagebox.showwarning("Aviso", "No puedes modificar una venta que ya esta pagada")
-            return
 
         id_venta = self.obtener_id_venta_actual()
         producto_seleccionado = self.combo_productos.get().strip()
@@ -256,7 +252,12 @@ class DetalleVentaFrame(tb.Frame):
         if producto_seleccionado == "":
             messagebox.showwarning("Aviso", "Selecciona un producto.")
             return
-
+        
+        estado = obtener_estado_venta(id_venta)
+        if estado == "PAGADA":
+            messagebox.showwarning("Aviso", "No puedes modificar una venta que ya está PAGADA.")
+            return
+        
         id_producto = self.productos_dict.get(producto_seleccionado)
 
         exito, mensaje = agregar_detalle_venta(id_venta, id_producto, cantidad)
@@ -284,15 +285,11 @@ class DetalleVentaFrame(tb.Frame):
         if estado == "PAGADA":
             messagebox.showwarning("Aviso", "No puedes modificar una venta que ya esta pagada")
             return
-        
+
         if self.id_detalle_seleccionado is None:
             messagebox.showwarning("Aviso", "Selecciona un detalle primero.")
             return
-
-        confirmar = messagebox.askyesno("Confirmar", "¿Deseas eliminar este detalle?")
-        if not confirmar:
-            return
-
+        
         exito, mensaje = eliminar_detalle_venta(self.id_detalle_seleccionado)
 
         if exito:
