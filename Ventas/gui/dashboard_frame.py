@@ -7,7 +7,10 @@ from controllers.dashboard_controller import (
     obtener_total_saldo_pendiente,
     obtener_conteo_estados
 )
-from controllers.exportar_controller import exportar_ventas_excel, exportar_pagos_excel
+from controllers.reporte_controller import (
+    exportar_reporte_semanal,
+    exportar_reporte_mensual
+)
 
 
 class DashboardFrame(tb.Frame):
@@ -46,21 +49,21 @@ class DashboardFrame(tb.Frame):
         self.card_pendientes = self.crear_tarjeta(self.tarjetas, "Ventas pendientes", "0", "danger")
         self.card_pendientes.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
 
-        botones = tb.Frame(self)
-        botones.pack(fill=X, pady=(20, 0))
+        botones_reportes = tb.Frame(self)
+        botones_reportes.pack(fill=X, pady=(10, 0))
 
         tb.Button(
-            botones,
-            text="Exportar ventas a Excel",
+            botones_reportes,
+            text="Exportar reporte semanal",
             bootstyle="success",
-            command=self.exportar_ventas
+            command=self.exportar_reporte_semanal_gui
         ).pack(side=LEFT, padx=5)
 
         tb.Button(
-            botones,
-            text="Exportar pagos a Excel",
-            bootstyle="info",
-            command=self.exportar_pagos
+            botones_reportes,
+            text="Exportar reporte mensual",
+            bootstyle="primary",
+            command=self.exportar_reporte_mensual_gui
         ).pack(side=LEFT, padx=5)
 
         self.actualizar_datos()
@@ -92,16 +95,16 @@ class DashboardFrame(tb.Frame):
         self.card_abonadas.etiqueta_valor.config(text=str(estados["abonadas"]))
         self.card_pendientes.etiqueta_valor.config(text=str(estados["pendientes"]))
     
-    def exportar_ventas(self):
+    def exportar_reporte_semanal_gui(self):
         try:
-            ruta = exportar_ventas_excel()
-            messagebox.showinfo("Éxito", f"Ventas exportadas correctamente en:\n{ruta}")
+            ruta = exportar_reporte_semanal()
+            messagebox.showinfo("Éxito", f"Reporte semanal exportado correctamente en:\n{ruta}")
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudieron exportar las ventas.\n{e}")
+            messagebox.showerror("Error", f"No se pudo exportar el reporte semanal.\n{e}")
 
-    def exportar_pagos(self):
+    def exportar_reporte_mensual_gui(self):
         try:
-            ruta = exportar_pagos_excel()
-            messagebox.showinfo("Éxito", f"Pagos exportados correctamente en:\n{ruta}")
+            ruta = exportar_reporte_mensual()
+            messagebox.showinfo("Éxito", f"Reporte mensual exportado correctamente en:\n{ruta}")
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudieron exportar los pagos.\n{e}")
+            messagebox.showerror("Error", f"No se pudo exportar el reporte mensual.\n{e}")
