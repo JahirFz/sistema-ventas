@@ -9,6 +9,7 @@ from controllers.detalle_venta_controller import (
     listar_detalle_por_venta,
     eliminar_detalle_venta
 )
+from controllers.venta_controller import listar_ventas, buscar_venta_por_id
 
 
 class DetalleVentaFrame(tb.Frame):
@@ -112,14 +113,31 @@ class DetalleVentaFrame(tb.Frame):
         ).pack(side=LEFT)
 
     def crear_resumen(self):
-        self.lbl_total = tb.Label(
-            self,
-            text="Total de la venta: $0.00",
-            font=("Segoe UI", 14, "bold"),
-            bootstyle="info"
-        )
-        self.lbl_total.grid(row=3, column=0, sticky=E, pady=(10, 0))
+        marco = tb.Labelframe(self, text="Resumen de la venta", padding=15, bootstyle="info")
+        marco.grid(row=3, column=0, sticky=E, pady=(10, 0))
 
+        self.lbl_subtotal = tb.Label(
+            marco,
+            text="Subtotal de producto: $0.00",
+            font=("Segoe UI", 11, "bold")
+        )
+        self.lbl_subtotal.grid(row=0, column=0, sticky=E, padx=10, pady=2)
+
+        self.lbl_iva = tb.Label(
+            marco,
+            text="IVA: $0.00",
+            font=("Segoe UI", 11, "bold")
+        )
+        self.lbl_iva.grid(row=1, column=0, sticky=E, padx=10, pady=10)
+
+        self.lbl_total_final = tb.Label(
+            marco,
+            text="Total final: $0.00",
+            font=("Segoe UI", 12, "bold"),
+            bootstyle="success"
+        )
+        self.lbl_total_final.grid(row=2, column=0, sticky=E, padx=10, pady=2)
+        
     def actualizar_datos(self):
         self.cargar_ventas()
         self.cargar_productos()
@@ -205,9 +223,17 @@ class DetalleVentaFrame(tb.Frame):
                 )
             )
 
-        # Aquí mostramos el total actual tomando la suma de subtotales visibles del detalle.
-        # El total real de venta con IVA se sigue guardando en ventas.
-        self.lbl_total.config(text=f"Subtotal de productos: ${total:.2f}")
+        venta = buscar_venta_por_id(id_venta)
+
+        if venta:
+            total_final = float(venta[5])
+        else:
+            total_final = 0
+        iva = total_final - total
+
+        self.lbl_subtotal.config(text=f"Subtotal de productos: ${total:.2f}")
+        self.lbl_iva.config(text=f"IVA: ${iva:.2f}")
+        self.lbl_total_final.config(text=f"Total final: ${total_final:.2f}")
 
     def cambio_venta(self, event):
         self.id_detalle_seleccionado = None
