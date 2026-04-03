@@ -1,11 +1,13 @@
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
+from tkinter import messagebox
 from controllers.dashboard_controller import (
     obtener_total_ventas,
     obtener_total_cobrado,
     obtener_total_saldo_pendiente,
     obtener_conteo_estados
 )
+from controllers.exportar_controller import exportar_ventas_excel, exportar_pagos_excel
 
 
 class DashboardFrame(tb.Frame):
@@ -44,6 +46,23 @@ class DashboardFrame(tb.Frame):
         self.card_pendientes = self.crear_tarjeta(self.tarjetas, "Ventas pendientes", "0", "danger")
         self.card_pendientes.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
 
+        botones = tb.Frame(self)
+        botones.pack(fill=X, pady=(20, 0))
+
+        tb.Button(
+            botones,
+            text="Exportar ventas a Excel",
+            bootstyle="success",
+            command=self.exportar_ventas
+        ).pack(side=LEFT, padx=5)
+
+        tb.Button(
+            botones,
+            text="Exportar pagos a Excel",
+            bootstyle="info",
+            command=self.exportar_pagos
+        ).pack(side=LEFT, padx=5)
+
         self.actualizar_datos()
 
     def crear_tarjeta(self, parent, titulo, valor, estilo):
@@ -72,3 +91,17 @@ class DashboardFrame(tb.Frame):
         self.card_pagadas.etiqueta_valor.config(text=str(estados["pagadas"]))
         self.card_abonadas.etiqueta_valor.config(text=str(estados["abonadas"]))
         self.card_pendientes.etiqueta_valor.config(text=str(estados["pendientes"]))
+    
+    def exportar_ventas(self):
+        try:
+            ruta = exportar_ventas_excel()
+            messagebox.showinfo("Éxito", f"Ventas exportadas correctamente en:\n{ruta}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudieron exportar las ventas.\n{e}")
+
+    def exportar_pagos(self):
+        try:
+            ruta = exportar_pagos_excel()
+            messagebox.showinfo("Éxito", f"Pagos exportados correctamente en:\n{ruta}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudieron exportar los pagos.\n{e}")
