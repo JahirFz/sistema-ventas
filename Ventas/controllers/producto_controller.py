@@ -15,43 +15,33 @@ def agregar_producto(nombre, precio):
 
     precio = float(precio)
 
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute(
-        "INSERT INTO productos (nombre, precio) VALUES (?, ?)",
-        (nombre, precio)
-    )
-
-    conexion.commit()
-    conexion.close()
+        conexion.execute(
+            "INSERT INTO productos (nombre, precio) VALUES (?, ?)",
+            (nombre, precio)
+        )
 
     return True, "Producto agregado correctamente."
 
 
 def listar_productos():
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("SELECT id_producto, nombre, precio FROM productos")
-    productos = cursor.fetchall()
+        cursor = conexion.execute("SELECT id_producto, nombre, precio FROM productos")
 
-    conexion.close()
-    return productos
+        return cursor.fetchall()
 
 
 def buscar_producto_por_id(id_producto):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute(
-        "SELECT id_producto, nombre, precio FROM productos WHERE id_producto = ?",
-        (id_producto,)
-    )
-    producto = cursor.fetchone()
-
-    conexion.close()
-    return producto
+        cursor = conexion.execute(
+            "SELECT id_producto, nombre, precio FROM productos WHERE id_producto = ?",
+            (id_producto,)
+        )
+    
+        return cursor.fetchone()
 
 
 def actualizar_producto(id_producto, nuevo_nombre, nuevo_precio):
@@ -68,50 +58,38 @@ def actualizar_producto(id_producto, nuevo_nombre, nuevo_precio):
 
     nuevo_precio = float(nuevo_precio)
 
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute(
-        "SELECT id_producto FROM productos WHERE id_producto = ?",
-        (id_producto,)
-    )
-    producto = cursor.fetchone()
+        cursor = conexion.execute(
+            "SELECT id_producto FROM productos WHERE id_producto = ?",
+            (id_producto,)
+        )
 
-    if producto is None:
-        conexion.close()
-        return False, "No existe un producto con ese ID."
+        if  cursor.fetchone() is None:
+            return False, "No existe un producto con ese ID."
 
-    cursor.execute(
-        "UPDATE productos SET nombre = ?, precio = ? WHERE id_producto = ?",
-        (nuevo_nombre, nuevo_precio, id_producto)
-    )
-
-    conexion.commit()
-    conexion.close()
+        conexion.execute(
+            "UPDATE productos SET nombre = ?, precio = ? WHERE id_producto = ?",
+            (nuevo_nombre, nuevo_precio, id_producto)
+        )
 
     return True, "Producto actualizado correctamente."
 
 
 def eliminar_producto(id_producto):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute(
-        "SELECT id_producto FROM productos WHERE id_producto = ?",
-        (id_producto,)
-    )
-    producto = cursor.fetchone()
+        cursor = conexion.execute(
+            "SELECT id_producto FROM productos WHERE id_producto = ?",
+            (id_producto,)
+        )
 
-    if producto is None:
-        conexion.close()
-        return False, "No existe un producto con ese ID."
+        if cursor.fetchone is None:
+            return False, "No existe un producto con ese ID."
 
-    cursor.execute(
-        "DELETE FROM productos WHERE id_producto = ?",
-        (id_producto,)
-    )
-
-    conexion.commit()
-    conexion.close()
-
+        conexion.execute(
+            "DELETE FROM productos WHERE id_producto = ?",
+            (id_producto,)
+        )
+        
     return True, "Producto eliminado correctamente."

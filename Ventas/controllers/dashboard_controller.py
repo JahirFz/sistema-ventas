@@ -3,57 +3,43 @@ from controllers.pago_controller import obtener_estado_venta
 
 
 def obtener_total_ventas():
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT COALESCE(SUM(total), 0)
-        FROM ventas
-    """)
-    resultado = cursor.fetchone()[0]
+        cursor = conexion.execute("""
+            SELECT COALESCE(SUM(total), 0)
+            FROM ventas
+        """)
 
-    conexion.close()
-    return round(resultado, 2)
+        return round(cursor.fetchone()[0], 2)
 
 
 def obtener_total_cobrado():
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT COALESCE(SUM(monto), 0)
-        FROM pagos
-    """)
-    resultado = cursor.fetchone()[0]
+        cursor = conexion.execute("""
+            SELECT COALESCE(SUM(monto), 0)
+            FROM pagos
+        """)
 
-    conexion.close()
-    return round(resultado, 2)
+        return round(cursor.fetchone()[0], 2)
 
 
 def obtener_total_saldo_pendiente():
-    total_ventas = obtener_total_ventas()
-    total_cobrado = obtener_total_cobrado()
-    return round(total_ventas - total_cobrado, 2)
+    return round(obtener_total_ventas() - obtener_total_cobrado(), 2)
 
 
 def obtener_conteo_estados():
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT id_venta
-        FROM ventas
-    """)
-    ventas = cursor.fetchall()
+        cursor = conexion.execute("""
+            SELECT id_venta
+            FROM ventas
+        """)
+        ventas = cursor.fetchall()
 
-    conexion.close()
+    pagadas = abonadas = pendientes = 0
 
-    pagadas = 0
-    abonadas = 0
-    pendientes = 0
-
-    for venta in ventas:
-        id_venta = venta[0]
+    for (id_venta,) in ventas:
         estado = obtener_estado_venta(id_venta)
 
         if estado == "PAGADA":
@@ -69,6 +55,3 @@ def obtener_conteo_estados():
         "pendientes": pendientes
     }
 
-def hacer_backup(self):
-    ruta = crear_backup()
-    messagebox.showinfo("Backup", f"Respaldo creado en:\n{ruta}")

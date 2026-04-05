@@ -19,59 +19,47 @@ def agregar_venta(fecha, id_cliente, requiere_factura):
     if requiere_factura not in[0, 1]:
         return False, "El valor de factura no es valido"
     
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute(
-        "SELECT id_cliente FROM clientes WHERE id_cliente = ?",
-        (id_cliente,)
-    )
-    cliente = cursor.fetchone()
+        cursor = conexion.execute(
+            "SELECT id_cliente FROM clientes WHERE id_cliente = ?",
+            (id_cliente,)
+        )
 
-    if cliente is None:
-        conexion.close()
-        return False, "No existe un cliente con ese ID."
+        if cursor.fetchone() is None:
+            return False, "No existe un cliente con ese ID."
 
-    cursor.execute(
-        "INSERT INTO ventas (fecha, id_cliente, requiere_factura, total) VALUES (?, ?, ?, ?)",
-        (fecha, id_cliente, requiere_factura, 0)
-    )
+        conexion.execute(
+            "INSERT INTO ventas (fecha, id_cliente, requiere_factura, total) VALUES (?, ?, ?, ?)",
+            (fecha, id_cliente, requiere_factura, 0)
+        )
 
-    conexion.commit()
-    conexion.close()
-
-    return True, "Venta registrada correctamente con total inicial en 0."
+        return True, "Venta registrada correctamente con total inicial en 0."
 
 
 def listar_ventas():
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT v.id_venta, v.fecha, v.id_cliente, c.nombre, v.requiere_factura, v.total
-        FROM ventas v
-        INNER JOIN clientes c ON v.id_cliente = c.id_cliente
-    """)
-    ventas = cursor.fetchall()
+        cursor = conexion.execute("""
+            SELECT v.id_venta, v.fecha, v.id_cliente, c.nombre, v.requiere_factura, v.total
+            FROM ventas v
+            INNER JOIN clientes c ON v.id_cliente = c.id_cliente
+        """)
 
-    conexion.close()
-    return ventas
+        return cursor.fetchall()
 
 
 def buscar_venta_por_id(id_venta):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT v.id_venta, v.fecha, v.id_cliente, c.nombre, v.requiere_factura, v.total
-        FROM ventas v
-        INNER JOIN clientes c ON v.id_cliente = c.id_cliente
-        WHERE v.id_venta = ?
-    """, (id_venta,))
-    venta = cursor.fetchone()
+        cursor = conexion.execute("""
+            SELECT v.id_venta, v.fecha, v.id_cliente, c.nombre, v.requiere_factura, v.total
+            FROM ventas v
+            INNER JOIN clientes c ON v.id_cliente = c.id_cliente
+            WHERE v.id_venta = ?
+        """, (id_venta,))
 
-    conexion.close()
-    return venta
+        return cursor.fetchone()
 
 
 def actualizar_venta(id_venta, nueva_fecha, nuevo_id_cliente, requiere_factura):
@@ -96,63 +84,49 @@ def actualizar_venta(id_venta, nueva_fecha, nuevo_id_cliente, requiere_factura):
     if requiere_factura not in [0, 1]:
         return False, "El valor de factura no es valido"
     
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute(
-        "SELECT id_venta FROM ventas WHERE id_venta = ?",
-        (id_venta,)
-    )
-    venta = cursor.fetchone()
+        cursor = conexion.execute(
+            "SELECT id_venta FROM ventas WHERE id_venta = ?",
+            (id_venta,)
+        )
 
-    if venta is None:
-        conexion.close()
-        return False, "No existe una venta con ese ID."
+        if cursor.fetchone() is None:
+            return False, "No existe una venta con ese ID."
 
-    cursor.execute(
-        "SELECT id_cliente FROM clientes WHERE id_cliente = ?",
-        (nuevo_id_cliente,)
-    )
-    cliente = cursor.fetchone()
+        cursor = conexion.execute(
+            "SELECT id_cliente FROM clientes WHERE id_cliente = ?",
+            (nuevo_id_cliente,)
+        )
+       
+        if cursor.fetchone() is None:
+            return False, "No existe un cliente con ese ID."
 
-    if cliente is None:
-        conexion.close()
-        return False, "No existe un cliente con ese ID."
+        conexion.execute("""
+            UPDATE ventas
+            SET fecha = ?, id_cliente = ?, requiere_factura = ?
+            WHERE id_venta = ?
+        """, (nueva_fecha, nuevo_id_cliente, requiere_factura, id_venta))
 
-    cursor.execute("""
-        UPDATE ventas
-        SET fecha = ?, id_cliente = ?, requiere_factura = ?
-        WHERE id_venta = ?
-    """, (nueva_fecha, nuevo_id_cliente, requiere_factura, id_venta))
-
-    conexion.commit()
-    conexion.close()
-
+        
     recalcular_total_venta(id_venta)
 
     return True, "Venta actualizada correctamente."
 
 
 def eliminar_venta(id_venta):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
+        cursor = conexion.execute(
+            "SELECT id_venta FROM ventas WHERE id_venta = ?",
+            (id_venta,)
+        )
+        
+        if cursor.fetchone() is None:
+            return False, "No existe una venta con ese ID."
 
-    cursor.execute(
-        "SELECT id_venta FROM ventas WHERE id_venta = ?",
-        (id_venta,)
-    )
-    venta = cursor.fetchone()
-
-    if venta is None:
-        conexion.close()
-        return False, "No existe una venta con ese ID."
-
-    cursor.execute(
-        "DELETE FROM ventas WHERE id_venta = ?",
-        (id_venta,)
-    )
-
-    conexion.commit()
-    conexion.close()
+        conexion.execute(
+            "DELETE FROM ventas WHERE id_venta = ?",
+            (id_venta,)
+        )
 
     return True, "Venta eliminada correctamente."

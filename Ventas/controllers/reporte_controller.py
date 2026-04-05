@@ -29,24 +29,22 @@ def obtener_rango_mensual():
 
 
 def obtener_ventas_por_rango(fecha_inicio, fecha_fin):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT 
-            v.id_venta,
-            v.fecha,
-            c.nombre,
-            v.requiere_factura,
-            v.total
-        FROM ventas v
-        INNER JOIN clientes c ON v.id_cliente = c.id_cliente
-        WHERE v.fecha BETWEEN ? AND ?
-        ORDER BY v.fecha, v.id_venta
-    """, (fecha_inicio, fecha_fin))
+        cursor = conexion.execute("""
+            SELECT 
+                v.id_venta,
+                v.fecha,
+                c.nombre,
+                v.requiere_factura,
+                v.total
+            FROM ventas v
+            INNER JOIN clientes c ON v.id_cliente = c.id_cliente
+            WHERE v.fecha BETWEEN ? AND ?
+            ORDER BY v.fecha, v.id_venta
+        """, (fecha_inicio, fecha_fin))
 
-    ventas = cursor.fetchall()
-    conexion.close()
+        ventas = cursor.fetchall()
 
     resultado = []
     for venta in ventas:
@@ -64,35 +62,32 @@ def obtener_ventas_por_rango(fecha_inicio, fecha_fin):
 
 
 def obtener_pagos_por_rango(fecha_inicio, fecha_fin):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT 
-            p.id_pago,
-            p.id_venta,
-            p.fecha,
-            p.monto,
-            p.metodo_pago
-        FROM pagos p
-        WHERE p.fecha BETWEEN ? AND ?
-        ORDER BY p.fecha, p.id_pago
-    """, (fecha_inicio, fecha_fin))
+        cursor = conexion.execute("""
+            SELECT 
+                p.id_pago,
+                p.id_venta,
+                p.fecha,
+                p.monto,
+                p.metodo_pago
+            FROM pagos p
+            WHERE p.fecha BETWEEN ? AND ?
+            ORDER BY p.fecha, p.id_pago
+        """, (fecha_inicio, fecha_fin))
 
-    pagos = cursor.fetchall()
-    conexion.close()
+        pagos = cursor.fetchall()
 
-    resultado = []
-    for pago in pagos:
-        resultado.append({
+    return [
+        {
             "id_pago": pago[0],
             "id_venta": pago[1],
             "fecha": pago[2],
             "monto": float(pago[3]),
             "metodo_pago": pago[4]
-        })
-
-    return resultado
+        }
+        for pago in pagos
+    ]
 
 
 def obtener_resumen_por_rango(fecha_inicio, fecha_fin):
@@ -102,10 +97,7 @@ def obtener_resumen_por_rango(fecha_inicio, fecha_fin):
     total_vendido = round(sum(v["total"] for v in ventas), 2)
     total_cobrado = round(sum(p["monto"] for p in pagos), 2)
     saldo_pendiente = round(total_vendido - total_cobrado, 2)
-
-    ventas_pagadas = sum(1 for v in ventas if v["estado"] == "PAGADA")
-    ventas_abonadas = sum(1 for v in ventas if v["estado"] == "ABONADA")
-    ventas_pendientes = sum(1 for v in ventas if v["estado"] == "PENDIENTE")
+    
 
     return {
         "fecha_inicio": fecha_inicio,
@@ -113,9 +105,9 @@ def obtener_resumen_por_rango(fecha_inicio, fecha_fin):
         "total_vendido": total_vendido,
         "total_cobrado": total_cobrado,
         "saldo_pendiente": saldo_pendiente,
-        "ventas_pagadas": ventas_pagadas,
-        "ventas_abonadas": ventas_abonadas,
-        "ventas_pendientes": ventas_pendientes
+        "ventas_pagadas": sum(1 for v in ventas if v["estado"] == "PAGADA"),
+        "ventas_abonadas": sum(1 for v in ventas if v["estado"] == "ABONADA"),
+        "ventas_pendientes": sum(1 for v in ventas if v["estado"] == "PENDIENTE")
     }
 
 

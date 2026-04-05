@@ -32,13 +32,12 @@ def crear_backup():
 
         origen.close()
         destino.close()
-
+        
+        limpiar_backups()
         return True, ruta_backup
 
     except Exception as e:
         return False, str(e)
-    
-    limpiar_backups()
 
 def restaurar_backup(ruta_backup):
     try:

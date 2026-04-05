@@ -2,40 +2,32 @@ from config.database import conectar
 from utils.validaciones import validar_cantidad
 
 def recalcular_total_venta(id_venta):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT COALESCE(SUM(subtotal), 0)
-        FROM detalle_ventas
-        WHERE id_venta = ?
-    """, (id_venta,))
-    resultado = cursor.fetchone()
+        cursor = conexion.execute("""
+            SELECT COALESCE(SUM(subtotal), 0)
+            FROM detalle_ventas
+            WHERE id_venta = ?
+        """, (id_venta,))
 
-    subtotal_productos = resultado[0] if resultado else 0
+        subtotal_productos = cursor.fetchone()[0] or 0
 
-    cursor.execute("""
-        SELECT requiere_factura
-        FROM ventas
-        WHERE id_venta = ?
-    """, (id_venta,))
-    factura = cursor.fetchone()
+        cursor = conexion.execute("""
+            SELECT requiere_factura
+            FROM ventas
+            WHERE id_venta = ?
+        """, (id_venta,))
+        factura = cursor.fetchone()
 
-    requiere_factura = factura[0] if factura else 0
+        requiere_factura = factura[0] if factura else 0
 
-    if requiere_factura == 1:
-        total_final = subtotal_productos * 1.16
-    else:
-        total_final = subtotal_productos
+        total_final = subtotal_productos * 1.16 if requiere_factura == 1 else subtotal_productos
 
-    cursor.execute("""
-        UPDATE ventas
-        SET total = ?
-        WHERE id_venta = ?
-    """, (total_final, id_venta))
-
-    conexion.commit()
-    conexion.close()
+        conexion.execute("""
+            UPDATE ventas
+            SET total = ?
+            WHERE id_venta = ?
+        """, (total_final, id_venta))
 
 
 def agregar_detalle_venta(id_venta, id_producto, cantidad):
@@ -54,37 +46,30 @@ def agregar_detalle_venta(id_venta, id_producto, cantidad):
 
     cantidad = int(cantidad)
 
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("SELECT id_venta FROM ventas WHERE id_venta = ?", (id_venta,))
-    venta = cursor.fetchone()
+        cursor = conexion.execute("SELECT id_venta FROM ventas WHERE id_venta = ?", (id_venta,))
 
-    if venta is None:
-        conexion.close()
-        return False, "No existe una venta con ese ID."
+        if cursor.fetchone is None:
+            return False, "No existe una venta con ese ID."
 
-    cursor.execute("""
-        SELECT id_producto, nombre, precio
-        FROM productos
-        WHERE id_producto = ?
-    """, (id_producto,))
-    producto = cursor.fetchone()
+        cursor = conexion.execute("""
+            SELECT id_producto, nombre, precio
+            FROM productos
+            WHERE id_producto = ?
+        """, (id_producto,))
+        producto = cursor.fetchone()
 
-    if producto is None:
-        conexion.close()
-        return False, "No existe un producto con ese ID."
+        if producto is None:
+            return False, "No existe un producto con ese ID."
 
-    precio_unitario = producto[2]
-    subtotal = cantidad * precio_unitario
+        precio_unitario = producto[2]
+        subtotal = cantidad * precio_unitario
 
-    cursor.execute("""
-        INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario, subtotal)
-        VALUES (?, ?, ?, ?, ?)
-    """, (id_venta, id_producto, cantidad, precio_unitario, subtotal))
-
-    conexion.commit()
-    conexion.close()
+        conexion.execute("""
+            INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario, subtotal)
+            VALUES (?, ?, ?, ?, ?)
+        """, (id_venta, id_producto, cantidad, precio_unitario, subtotal))
 
     recalcular_total_venta(id_venta)
 
@@ -92,52 +77,44 @@ def agregar_detalle_venta(id_venta, id_producto, cantidad):
 
 
 def listar_detalle_por_venta(id_venta):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT 
-            dv.id_detalle,
-            dv.id_venta,
-            dv.id_producto,
-            p.nombre,
-            dv.cantidad,
-            dv.precio_unitario,
-            dv.subtotal
-        FROM detalle_ventas dv
-        INNER JOIN productos p ON dv.id_producto = p.id_producto
-        WHERE dv.id_venta = ?
-    """, (id_venta,))
-    detalles = cursor.fetchall()
+        cursor = conexion.execute("""
+            SELECT 
+                dv.id_detalle,
+                dv.id_venta,
+                dv.id_producto,
+                p.nombre,
+                dv.cantidad,
+                dv.precio_unitario,
+                dv.subtotal
+            FROM detalle_ventas dv
+            INNER JOIN productos p ON dv.id_producto = p.id_producto
+            WHERE dv.id_venta = ?
+        """, (id_venta,))
 
-    conexion.close()
-    return detalles
+        return cursor.fetchall()
 
 
 def eliminar_detalle_venta(id_detalle):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT id_detalle, id_venta
-        FROM detalle_ventas
-        WHERE id_detalle = ?
-    """, (id_detalle,))
-    detalle = cursor.fetchone()
+        cursor = conexion.execute("""
+            SELECT id_detalle, id_venta
+            FROM detalle_ventas
+            WHERE id_detalle = ?
+        """, (id_detalle,))
+        detalle = cursor.fetchone()
 
-    if detalle is None:
-        conexion.close()
-        return False, "No existe un detalle con ese ID."
+        if detalle is None:
+            return False, "No existe un detalle con ese ID."
 
-    id_venta = detalle[1]
+        id_venta = detalle[1]
 
-    cursor.execute("""
-        DELETE FROM detalle_ventas
-        WHERE id_detalle = ?
-    """, (id_detalle,))
-
-    conexion.commit()
-    conexion.close()
+        conexion.execute("""
+            DELETE FROM detalle_ventas
+            WHERE id_detalle = ?
+        """, (id_detalle,))
 
     recalcular_total_venta(id_venta)
 
@@ -145,23 +122,20 @@ def eliminar_detalle_venta(id_detalle):
 
 
 def buscar_detalle_por_id(id_detalle):
-    conexion = conectar()
-    cursor = conexion.cursor()
+    with conectar() as conexion:
 
-    cursor.execute("""
-        SELECT 
-            dv.id_detalle,
-            dv.id_venta,
-            dv.id_producto,
-            p.nombre,
-            dv.cantidad,
-            dv.precio_unitario,
-            dv.subtotal
-        FROM detalle_ventas dv
-        INNER JOIN productos p ON dv.id_producto = p.id_producto
-        WHERE dv.id_detalle = ?
-    """, (id_detalle,))
-    detalle = cursor.fetchone()
+        cursor = conexion.execute("""
+            SELECT 
+                dv.id_detalle,
+                dv.id_venta,
+                dv.id_producto,
+                p.nombre,
+                dv.cantidad,
+                dv.precio_unitario,
+                dv.subtotal
+            FROM detalle_ventas dv
+            INNER JOIN productos p ON dv.id_producto = p.id_producto
+            WHERE dv.id_detalle = ?
+        """, (id_detalle,))
 
-    conexion.close()
-    return detalle
+        return cursor.fetchone
