@@ -86,10 +86,10 @@ class DetalleVentaFrame(tb.Frame):
         self.tabla.heading("subtotal", text="Subtotal")
 
         self.tabla.column("id_detalle", width=70, anchor=CENTER)
-        self.tabla.column("producto", width=300, anchor=W)
+        self.tabla.column("producto", width=300, anchor=CENTER)
         self.tabla.column("cantidad", width=100, anchor=CENTER)
-        self.tabla.column("precio_unitario", width=140, anchor=E)
-        self.tabla.column("subtotal", width=140, anchor=E)
+        self.tabla.column("precio_unitario", width=140, anchor=CENTER)
+        self.tabla.column("subtotal", width=140, anchor=CENTER)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)

@@ -106,9 +106,9 @@ class VentaFrame(tb.Frame):
 
         self.tabla.column("id_venta", width=70, anchor=CENTER)
         self.tabla.column("fecha", width=120, anchor=CENTER)
-        self.tabla.column("cliente", width=300, anchor=W)
+        self.tabla.column("cliente", width=300, anchor=CENTER)
         self.tabla.column("factura", width=100, anchor=CENTER)
-        self.tabla.column("total", width=120, anchor=E)
+        self.tabla.column("total", width=120, anchor=CENTER)
         self.tabla.column("estado", width=120, anchor=CENTER)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)

@@ -76,7 +76,7 @@ class ClienteFrame(tb.Frame):
         self.tabla.heading("nombre", text="Nombre")
 
         self.tabla.column("id_cliente", width=80, anchor=CENTER)
-        self.tabla.column("nombre", width=400, anchor=W)
+        self.tabla.column("nombre", width=400, anchor=CENTER)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)

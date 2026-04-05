@@ -11,6 +11,12 @@ from gui.app import App
 def inicializar_sistema():
     if not os.path.exists("database"):
         os.makedirs("database")
+    
+    if not os.path.exists("exports"):
+        os.makedirs("exports")
+
+    if not os.path.exists("backups"):
+        os.makedirs("backups")
 
     crear_tabla_clientes()
     crear_tabla_productos()

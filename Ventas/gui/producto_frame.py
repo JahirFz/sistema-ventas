@@ -84,8 +84,8 @@ class ProductoFrame(tb.Frame):
         self.tabla.heading("precio", text="Precio")
 
         self.tabla.column("id_producto", width=80, anchor=CENTER)
-        self.tabla.column("nombre", width=400, anchor=W)
-        self.tabla.column("precio", width=120, anchor=E)
+        self.tabla.column("nombre", width=400, anchor=CENTER)
+        self.tabla.column("precio", width=120, anchor=CENTER)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)

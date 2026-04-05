@@ -116,8 +116,8 @@ class PagoFrame(tb.Frame):
 
         self.tabla.column("id_pago", width=80, anchor=CENTER)
         self.tabla.column("fecha", width=120, anchor=CENTER)
-        self.tabla.column("monto", width=120, anchor=E)
-        self.tabla.column("metodo", width=200, anchor=W)
+        self.tabla.column("monto", width=120, anchor=CENTER)
+        self.tabla.column("metodo", width=200, anchor=CENTER)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)
