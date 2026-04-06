@@ -1,5 +1,6 @@
 from config.database import conectar
 from utils.validaciones import validar_nombre, validar_precio
+import sqlite3
 
 def agregar_producto(nombre, precio):
     nombre = nombre.strip()
@@ -87,9 +88,12 @@ def eliminar_producto(id_producto):
         if cursor.fetchone is None:
             return False, "No existe un producto con ese ID."
 
-        conexion.execute(
-            "DELETE FROM productos WHERE id_producto = ?",
-            (id_producto,)
-        )
+        try:
+            conexion.execute(
+                "DELETE FROM productos WHERE id_producto = ?",
+                (id_producto,)
+            )
+        except sqlite3.IntegrityError:
+            return False,  "No se puede eliminar el producto porque está usado en ventas registradas"
         
     return True, "Producto eliminado correctamente."

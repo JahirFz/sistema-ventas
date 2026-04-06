@@ -1,6 +1,7 @@
 from config.database import conectar
 from utils.validaciones import validar_fecha
 from controllers.detalle_venta_controller import recalcular_total_venta
+import sqlite3
 
 def agregar_venta(fecha, id_cliente, requiere_factura):
     fecha = fecha.strip()
@@ -124,9 +125,12 @@ def eliminar_venta(id_venta):
         if cursor.fetchone() is None:
             return False, "No existe una venta con ese ID."
 
-        conexion.execute(
-            "DELETE FROM ventas WHERE id_venta = ?",
-            (id_venta,)
-        )
+        try:
+            conexion.execute(
+                "DELETE FROM ventas WHERE id_venta = ?",
+                (id_venta,)
+            )
+        except sqlite3.IntegrityError:
+            return False, "No se puede eliminar la venta porque tiene pagos o detalles registrados"
 
     return True, "Venta eliminada correctamente."

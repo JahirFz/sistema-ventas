@@ -1,5 +1,6 @@
 from config.database import conectar
 from utils.validaciones import validar_nombre
+import sqlite3
 
 def agregar_cliente(nombre):
     if nombre.strip() == "":
@@ -57,7 +58,9 @@ def eliminar_cliente(id_cliente):
 
         if cursor.fetchone() is None:
             return False, "No existe un cliente con ese ID."
-
-        conexion.execute("DELETE FROM clientes WHERE id_cliente = ?", (id_cliente,))
+        try:
+            conexion.execute("DELETE FROM clientes WHERE id_cliente = ?", (id_cliente,))
+        except sqlite3.IntegrityError:
+            return False, "No se puede eliminar el cliente porque tiene ventas registradas."
         
     return True, "Cliente eliminado correctamente."
