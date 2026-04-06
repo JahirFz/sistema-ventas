@@ -32,26 +32,32 @@ def obtener_conteo_estados():
     with conectar() as conexion:
 
         cursor = conexion.execute("""
-            SELECT id_venta
-            FROM ventas
+            SELECT
+                SUM(CASE
+                    WHEN COALESCE(p.total_pagado, 0) = 0 THEN 1
+                    ELSE 0
+                END) AS pendientes,
+                SUM(CASE
+                    WHEN COALESCE(p.total_pagado, 0) > 0
+                     AND COALESCE(p.total_pagado, 0) < v.total THEN 1
+                    ELSE 0
+                END) AS abonadas,
+                SUM(CASE
+                    WHEN COALESCE(p.total_pagado, 0) >= v.total THEN 1
+                    ELSE 0
+                END) AS pagadas
+            FROM ventas v
+            LEFT JOIN (
+                SELECT id_venta, SUM(monto) AS total_pagado
+                FROM pagos
+                GROUP BY id_venta
+            ) p ON v.id_venta = p.id_venta
         """)
-        ventas = cursor.fetchall()
-
-    pagadas = abonadas = pendientes = 0
-
-    for (id_venta,) in ventas:
-        estado = obtener_estado_venta(id_venta)
-
-        if estado == "PAGADA":
-            pagadas += 1
-        elif estado == "ABONADA":
-            abonadas += 1
-        elif estado == "PENDIENTE":
-            pendientes += 1
+        row = cursor.fetchone()
 
     return {
-        "pagadas": pagadas,
-        "abonadas": abonadas,
-        "pendientes": pendientes
+        "pendientes": row[0] or 0,
+        "abonadas":   row[1] or 0,
+        "pagadas":    row[2] or 0,
     }
 
