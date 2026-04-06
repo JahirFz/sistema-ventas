@@ -17,7 +17,7 @@ from controllers.pago_controller import (
 
 class PagoFrame(tb.Frame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent, style="App.TFrame")
 
         self.id_pago_seleccionado = None
         self.ventas_dict = {}
@@ -32,7 +32,7 @@ class PagoFrame(tb.Frame):
         self.colocar_fecha_hoy()
 
     def crear_formulario(self):
-        contenedor = tb.Frame(self)
+        contenedor = tb.Frame(self, padding=20, style="Surface.TFrame")
         contenedor.grid(row=0, column=0, sticky="ew", pady=(0, 15))
         contenedor.grid_columnconfigure(1, weight=1)
 
@@ -97,7 +97,7 @@ class PagoFrame(tb.Frame):
         self.lbl_estado.grid(row=0, column=3, sticky=W, padx=10)
 
     def crear_tabla(self):
-        marco_tabla = tb.Frame(self)
+        marco_tabla = tb.Frame(self, padding=12, style="Surface.TFrame")
         marco_tabla.grid(row=2, column=0, sticky="nsew")
 
         columnas = ("id_pago", "fecha", "monto", "metodo")
@@ -130,7 +130,7 @@ class PagoFrame(tb.Frame):
 
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_pago)
 
-        botones = tb.Frame(self)
+        botones = tb.Frame(self, style="App.TFrame")
         botones.grid(row=3, column=0, sticky=W, pady=(10, 0))
 
         tb.Button(

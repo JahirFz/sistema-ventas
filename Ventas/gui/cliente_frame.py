@@ -12,7 +12,7 @@ from controllers.cliente_controller import (
 
 class ClienteFrame(tb.Frame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent, style="App.TFrame")
 
         self.id_cliente_seleccionado = None
         self._todos_los_clientes = []
@@ -26,7 +26,7 @@ class ClienteFrame(tb.Frame):
         self.cargar_clientes()
 
     def crear_formulario(self):
-        contenedor = tb.Frame(self)
+        contenedor = tb.Frame(self, padding=20, style="Surface.TFrame")
         contenedor.grid(row=0, column=0, sticky="ew", pady=(0, 15))
         contenedor.grid_columnconfigure(1, weight=1)
 
@@ -62,7 +62,7 @@ class ClienteFrame(tb.Frame):
         ).grid(row=1, column=4, padx=5)
 
     def crear_buscador(self):
-        marco = tb.Frame(self)
+        marco = tb.Frame(self, padding=16, style="Surface.TFrame")
         marco.grid(row=1, column=0, sticky="ew", pady=(0, 8))
         marco.grid_columnconfigure(1, weight=1)
  
@@ -83,7 +83,7 @@ class ClienteFrame(tb.Frame):
         ).grid(row=0, column=2)
 
     def crear_tabla(self):
-        marco_tabla = tb.Frame(self)
+        marco_tabla = tb.Frame(self, padding=12, style="Surface.TFrame")
         marco_tabla.grid(row=2, column=0, sticky="nsew")
         self.grid_rowconfigure(2, weight=1)
 
@@ -113,7 +113,7 @@ class ClienteFrame(tb.Frame):
 
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_cliente)
 
-        botones = tb.Frame(self)
+        botones = tb.Frame(self, style="App.TFrame")
         botones.grid(row=3, column=0, sticky=W, pady=(10, 0))
 
         tb.Button(

@@ -14,7 +14,7 @@ from controllers.pago_controller import obtener_estado_venta
 
 class DetalleVentaFrame(tb.Frame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent, style="App.TFrame")
 
         self.id_detalle_seleccionado = None
         self.ventas_dict = {}
@@ -29,7 +29,7 @@ class DetalleVentaFrame(tb.Frame):
         self.actualizar_datos()
 
     def crear_formulario(self):
-        contenedor = tb.Frame(self)
+        contenedor = tb.Frame(self, padding=20, style="Surface.TFrame")
         contenedor.grid(row=0, column=0, sticky="ew", pady=(0, 15))
         contenedor.grid_columnconfigure(1, weight=1)
 
@@ -67,7 +67,7 @@ class DetalleVentaFrame(tb.Frame):
         ).grid(row=1, column=7, padx=5)
 
     def crear_tabla(self):
-        marco_tabla = tb.Frame(self)
+        marco_tabla = tb.Frame(self, padding=12, style="Surface.TFrame")
         marco_tabla.grid(row=1, column=0, sticky="nsew")
 
         columnas = ("id_detalle", "producto", "cantidad", "precio_unitario", "subtotal")
@@ -102,7 +102,7 @@ class DetalleVentaFrame(tb.Frame):
 
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_detalle)
 
-        botones = tb.Frame(self)
+        botones = tb.Frame(self, style="App.TFrame")
         botones.grid(row=2, column=0, sticky=W, pady=(10, 0))
 
         tb.Button(

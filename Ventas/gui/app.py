@@ -1,22 +1,24 @@
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from gui.menu_lateral import MenuLateral
-from gui.dashboard_frame import DashboardFrame
+from gui.dashboard_frame_modern import DashboardFrame
 from gui.cliente_frame import ClienteFrame
 from gui.producto_frame import ProductoFrame
 from gui.venta_frame import VentaFrame
 from gui.detalle_venta_frame import DetalleVentaFrame
 from gui.pago_frame import PagoFrame
+from gui.ui_styles import apply_global_styles
 from controllers.backup_controller import crear_backup
 
 
 class App(tb.Window):
     def __init__(self):
-        super().__init__(themename="flatly")
+        super().__init__(themename="litera")
+        apply_global_styles(self)
 
         self.title("Sistema de Ventas")
-        self.geometry("1200x700")
-        self.minsize(1000, 600)
+        self.geometry("1280x760")
+        self.minsize(1100, 680)
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -24,7 +26,7 @@ class App(tb.Window):
         self.menu_lateral = MenuLateral(self, self.cambiar_vista)
         self.menu_lateral.grid(row=0, column=0, sticky="ns")
 
-        self.contenedor = tb.Frame(self, padding=15)
+        self.contenedor = tb.Frame(self, padding=24, style="App.TFrame")
         self.contenedor.grid(row=0, column=1, sticky="nsew")
 
         self.contenedor.grid_rowconfigure(0, weight=1)
@@ -49,6 +51,7 @@ class App(tb.Window):
 
     def cambiar_vista(self, nombre_vista):
         frame = self.frames[nombre_vista]
+        self.menu_lateral.marcar_activa(nombre_vista)
 
         if hasattr(frame, "actualizar_datos"):
             frame.actualizar_datos()
