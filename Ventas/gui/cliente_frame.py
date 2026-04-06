@@ -15,11 +15,13 @@ class ClienteFrame(tb.Frame):
         super().__init__(parent)
 
         self.id_cliente_seleccionado = None
+        self._todos_los_clientes = []
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         self.crear_formulario()
+        self.crear_buscador()
         self.crear_tabla()
         self.cargar_clientes()
 
@@ -59,9 +61,31 @@ class ClienteFrame(tb.Frame):
             command=self.limpiar_formulario
         ).grid(row=1, column=4, padx=5)
 
+    def crear_buscador(self):
+        marco = tb.Frame(self)
+        marco.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        marco.grid_columnconfigure(1, weight=1)
+ 
+        tb.Label(marco, text="🔍 Buscar:").grid(row=0, column=0, sticky=W, padx=(0, 8))
+ 
+        self.var_busqueda = tb.StringVar()
+        self.var_busqueda.trace_add("write", self._filtrar)
+ 
+        self.entry_busqueda = tb.Entry(marco, textvariable=self.var_busqueda)
+        self.entry_busqueda.grid(row=0, column=1, sticky="ew", padx=(0, 8))
+ 
+        tb.Button(
+            marco,
+            text="✕",
+            bootstyle="secondary-outline",
+            width=3,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2)
+
     def crear_tabla(self):
         marco_tabla = tb.Frame(self)
-        marco_tabla.grid(row=1, column=0, sticky="nsew")
+        marco_tabla.grid(row=2, column=0, sticky="nsew")
+        self.grid_rowconfigure(2, weight=1)
 
         columnas = ("id_cliente", "nombre")
 
@@ -90,7 +114,7 @@ class ClienteFrame(tb.Frame):
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_cliente)
 
         botones = tb.Frame(self)
-        botones.grid(row=2, column=0, sticky=W, pady=(10, 0))
+        botones.grid(row=3, column=0, sticky=W, pady=(10, 0))
 
         tb.Button(
             botones,
@@ -100,13 +124,29 @@ class ClienteFrame(tb.Frame):
         ).pack(side=LEFT)
 
     def cargar_clientes(self):
+        self._todos_los_clientes = listar_clientes()
+        self._actualizar_tabla(self._todos_los_clientes)
+    
+    def _actualizar_tabla(self, clientes):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
-
-        clientes = listar_clientes()
-
         for cliente in clientes:
             self.tabla.insert("", END, values=(cliente[0], cliente[1]))
+
+    def _filtrar(self, *args):
+        texto = self.var_busqueda.get().strip().lower()
+        if not texto:
+            self._actualizar_tabla(self._todos_los_clientes)
+            return
+        filtrados = [
+            c for c in self._todos_los_clientes
+            if texto in str(c[0]).lower() or texto in c[1].lower()
+        ]
+        self._actualizar_tabla(filtrados)
+
+    def limpiar_busqueda(self):
+        self.var_busqueda.set("")
+        self.entry_busqueda.focus()
 
     def guardar_cliente(self):
         nombre = self.entry_nombre.get().strip()

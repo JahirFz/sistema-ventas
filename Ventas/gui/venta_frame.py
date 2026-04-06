@@ -18,11 +18,13 @@ class VentaFrame(tb.Frame):
 
         self.id_venta_seleccionada = None
         self.clientes_dict = {}
-
-        self.grid_rowconfigure(1, weight=1)
+        self._todas_las_ventas = []
+ 
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         self.crear_formulario()
+        self.crear_buscador()
         self.crear_tabla()
         self.cargar_clientes()
         self.cargar_ventas()
@@ -52,7 +54,7 @@ class VentaFrame(tb.Frame):
 
         tb.Label(contenedor, text="Cliente").grid(row=1, column=2, sticky=W, padx=(0, 10))
         self.combo_clientes = ttk.Combobox(contenedor, state="readonly", width=30)
-        self.combo_clientes.grid(row=1, column=3, sticky=W, padx=(0, 10))
+        self.combo_clientes.grid(row=1, column=2, sticky=W, padx=(0, 10))
 
         self.var_factura = tb.IntVar(value=0)
         self.check_factura = tb.Checkbutton(
@@ -84,9 +86,30 @@ class VentaFrame(tb.Frame):
             command=self.limpiar_formulario
         ).grid(row=1, column=7, padx=5)
 
+    def crear_buscador(self):
+        marco = tb.Frame(self)
+        marco.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        marco.grid_columnconfigure(1, weight=1)
+ 
+        tb.Label(marco, text="🔍 Buscar:").grid(row=0, column=0, sticky=W, padx=(0, 8))
+ 
+        self.var_busqueda = tb.StringVar()
+        self.var_busqueda.trace_add("write", self._filtrar)
+ 
+        self.entry_busqueda = tb.Entry(marco, textvariable=self.var_busqueda)
+        self.entry_busqueda.grid(row=0, column=1, sticky="ew", padx=(0, 8))
+
+        tb.Button(
+            marco,
+            text="✕",
+            bootstyle="secondary-outline",
+            width=3,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2)
+
     def crear_tabla(self):
         marco_tabla = tb.Frame(self)
-        marco_tabla.grid(row=1, column=0, sticky="nsew")
+        marco_tabla.grid(row=2, column=0, sticky="nsew")
 
         columnas = ("id_venta", "fecha", "cliente", "factura", "total", "estado")
 
@@ -127,7 +150,7 @@ class VentaFrame(tb.Frame):
         self.tabla.tag_configure("pendiente", background="#f8d7da")
 
         botones = tb.Frame(self)
-        botones.grid(row=2, column=0, sticky=W, pady=(10, 0))
+        botones.grid(row=3, column=0, sticky=W, pady=(10, 0))
 
         tb.Button(
             botones,
@@ -143,46 +166,61 @@ class VentaFrame(tb.Frame):
         nombres_clientes = []
 
         for cliente in clientes:
-            id_cliente = cliente[0]
-            nombre = cliente[1]
-            texto = f"{id_cliente} - {nombre}"
-            self.clientes_dict[texto] = id_cliente
+            texto = f"{cliente[0]} - {cliente[1]}"
+            self.clientes_dict[texto] = cliente[0]
             nombres_clientes.append(texto)
 
         self.combo_clientes["values"] = nombres_clientes
 
     def cargar_ventas(self):
-        for fila in self.tabla.get_children():
-            self.tabla.delete(fila)
-
         ventas = listar_ventas()
-
+        self._todas_las_ventas = []
+ 
         for venta in ventas:
             id_venta = venta[0]
-            factura_texto = "Sí" if venta[4] == 1 else "No"
             estado = obtener_estado_venta(id_venta)
+            self._todas_las_ventas.append({
+                "id": venta[0],
+                "fecha": venta[1],
+                "cliente": venta[3],
+                "factura": "Sí" if venta[4] == 1 else "No",
+                "total": venta[5],
+                "estado": estado
+            })
+ 
+        self._actualizar_tabla(self._todas_las_ventas)
 
-            if estado == "PAGADA":
-                tag = "pagada"
-            elif estado == "ABONADA":
-                tag = "abonada"
-            else:
-                tag = "pendiente"
-
+    def _actualizar_tabla(self, ventas):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+ 
+        for v in ventas:
+            tag = {"PAGADA": "pagada", "ABONADA": "abonada"}.get(v["estado"], "pendiente")
             self.tabla.insert(
-                "",
-                END,
-                values=(
-                    venta[0],
-                    venta[1],
-                    venta[3],
-                    factura_texto,
-                    f"${venta[5]:.2f}",
-                    estado
-                ),
+                "", END,
+                values=(v["id"], v["fecha"], v["cliente"], v["factura"], f"${v['total']:.2f}", v["estado"]),
                 tags=(tag,)
             )
 
+    def _filtrar(self, *args):
+        texto = self.var_busqueda.get().strip().lower()
+        if not texto:
+            self._actualizar_tabla(self._todas_las_ventas)
+            return
+ 
+        filtrados = [
+            v for v in self._todas_las_ventas
+            if texto in str(v["id"]).lower()
+            or texto in v["fecha"].lower()
+            or texto in v["cliente"].lower()
+            or texto in v["estado"].lower()
+        ]
+        self._actualizar_tabla(filtrados)
+    
+    def limpiar_busqueda(self):
+        self.var_busqueda.set("")
+        self.entry_busqueda.focus()
+        
     def guardar_venta(self):
         fecha = self.entry_fecha.get().strip()
         cliente_seleccionado = self.combo_clientes.get().strip()

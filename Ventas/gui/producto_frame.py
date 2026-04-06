@@ -15,11 +15,13 @@ class ProductoFrame(tb.Frame):
         super().__init__(parent)
 
         self.id_producto_seleccionado = None
-
+        self._todos_los_productos = []
+ 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         self.crear_formulario()
+        self.crear_buscador()
         self.crear_tabla()
         self.cargar_productos()
 
@@ -66,9 +68,30 @@ class ProductoFrame(tb.Frame):
             command=self.limpiar_formulario
         ).grid(row=1, column=6, padx=5)
 
+    def crear_buscador(self):
+        marco = tb.Frame(self)
+        marco.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        marco.grid_columnconfigure(1, weight=1)
+ 
+        tb.Label(marco, text="🔍 Buscar:").grid(row=0, column=0, sticky=W, padx=(0, 8))
+ 
+        self.var_busqueda = tb.StringVar()
+        self.var_busqueda.trace_add("write", self._filtrar)
+ 
+        self.entry_busqueda = tb.Entry(marco, textvariable=self.var_busqueda)
+        self.entry_busqueda.grid(row=0, column=1, sticky="ew", padx=(0, 8))
+ 
+        tb.Button(
+            marco,
+            text="✕",
+            bootstyle="secondary-outline",
+            width=3,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2)
+
     def crear_tabla(self):
         marco_tabla = tb.Frame(self)
-        marco_tabla.grid(row=1, column=0, sticky="nsew")
+        marco_tabla.grid(row=2, column=0, sticky="nsew")
 
         columnas = ("id_producto", "nombre", "precio")
 
@@ -99,7 +122,7 @@ class ProductoFrame(tb.Frame):
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_producto)
 
         botones = tb.Frame(self)
-        botones.grid(row=2, column=0, sticky=W, pady=(10, 0))
+        botones.grid(row=3, column=0, sticky=W, pady=(10, 0))
 
         tb.Button(
             botones,
@@ -109,17 +132,30 @@ class ProductoFrame(tb.Frame):
         ).pack(side=LEFT)
 
     def cargar_productos(self):
+        self._todos_los_productos = listar_productos()
+        self._actualizar_tabla(self._todos_los_productos)
+    
+    def _actualizar_tabla(self, productos):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
-
-        productos = listar_productos()
-
         for producto in productos:
-            self.tabla.insert(
-                "",
-                END,
-                values=(producto[0], producto[1], f"${producto[2]:.2f}")
-            )
+            self.tabla.insert("", END, values=(producto[0], producto[1], f"${producto[2]:.2f}"))
+    
+    def _filtrar(self, *args):
+        texto = self.var_busqueda.get().strip().lower()
+        if not texto:
+            self._actualizar_tabla(self._todos_los_productos)
+            return
+ 
+        filtrados = [
+            p for p in self._todos_los_productos
+            if texto in str(p[0]).lower() or texto in p[1].lower()
+        ]
+        self._actualizar_tabla(filtrados)
+    
+    def limpiar_busqueda(self):
+        self.var_busqueda.set("")
+        self.entry_busqueda.focus()
 
     def guardar_producto(self):
         nombre = self.entry_nombre.get().strip()
