@@ -1,5 +1,6 @@
 from config.database import conectar
 from utils.validaciones import validar_cantidad
+from  config.config import IVA
 
 def recalcular_total_venta(id_venta):
     with conectar() as conexion:
@@ -21,7 +22,7 @@ def recalcular_total_venta(id_venta):
 
         requiere_factura = factura[0] if factura else 0
 
-        total_final = subtotal_productos * 1.16 if requiere_factura == 1 else subtotal_productos
+        total_final = subtotal_productos * (1 + IVA) if requiere_factura == 1 else subtotal_productos
 
         conexion.execute("""
             UPDATE ventas
