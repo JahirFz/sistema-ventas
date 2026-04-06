@@ -51,7 +51,7 @@ def agregar_detalle_venta(id_venta, id_producto, cantidad):
 
         cursor = conexion.execute("SELECT id_venta FROM ventas WHERE id_venta = ?", (id_venta,))
 
-        if cursor.fetchone is None:
+        if cursor.fetchone() is None:
             return False, "No existe una venta con ese ID."
 
         cursor = conexion.execute("""
@@ -139,4 +139,4 @@ def buscar_detalle_por_id(id_detalle):
             WHERE dv.id_detalle = ?
         """, (id_detalle,))
 
-        return cursor.fetchone
+        return cursor.fetchone()

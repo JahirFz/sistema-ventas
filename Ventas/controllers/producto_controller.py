@@ -85,7 +85,7 @@ def eliminar_producto(id_producto):
             (id_producto,)
         )
 
-        if cursor.fetchone is None:
+        if cursor.fetchone() is None:
             return False, "No existe un producto con ese ID."
 
         try:
