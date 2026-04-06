@@ -73,6 +73,9 @@ def agregar_pago(id_venta, fecha, monto, metodo_pago):
 
         total_venta = round(venta[1], 2)
 
+        if total_venta == 0:
+            return False, "No se puede registrar un pago: la venta no tiene productos agregados."
+
         cursor = conexion.execute("""
             SELECT COALESCE(SUM(monto), 0)
             FROM pagos
