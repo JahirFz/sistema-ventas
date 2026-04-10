@@ -1,4 +1,4 @@
-from controllers.producto_controller import (
+from controllers.producto_controller_v2 import (
     agregar_producto,
     listar_productos,
     buscar_producto_por_id,
@@ -21,8 +21,10 @@ def menu_productos():
         if opcion == "1":
             nombre = input("Ingresa el nombre del producto: ").strip()
             precio = input("Ingresa el precio del producto: ").strip()
+            color = input("Ingresa el color HEX del producto (ej. #FFAA00): ").strip() or "#FFFFFF"
+            leyenda = input("Ingresa una leyenda corta: ").strip()
 
-            exito, mensaje = agregar_producto(nombre, precio)
+            exito, mensaje = agregar_producto(nombre, precio, color, leyenda)
             print(mensaje)
 
         elif opcion == "2":
@@ -33,7 +35,10 @@ def menu_productos():
             else:
                 print("\n--- LISTA DE PRODUCTOS ---")
                 for producto in productos:
-                    print(f"ID: {producto[0]} | Nombre: {producto[1]} | Precio: ${producto[2]:.2f}")
+                    print(
+                        f"ID: {producto[0]} | Nombre: {producto[1]} | Precio: ${producto[2]:.2f} | "
+                        f"Color: {producto[3]} | Leyenda: {producto[4]}"
+                    )
 
         elif opcion == "3":
             try:
@@ -41,7 +46,10 @@ def menu_productos():
                 producto = buscar_producto_por_id(id_producto)
 
                 if producto:
-                    print(f"ID: {producto[0]} | Nombre: {producto[1]} | Precio: ${producto[2]:.2f}")
+                    print(
+                        f"ID: {producto[0]} | Nombre: {producto[1]} | Precio: ${producto[2]:.2f} | "
+                        f"Color: {producto[3]} | Leyenda: {producto[4]}"
+                    )
                 else:
                     print("Producto no encontrado.")
             except ValueError:
@@ -52,8 +60,12 @@ def menu_productos():
                 id_producto = int(input("Ingresa el ID del producto a actualizar: "))
                 nuevo_nombre = input("Ingresa el nuevo nombre: ").strip()
                 nuevo_precio = input("Ingresa el nuevo precio: ").strip()
+                nuevo_color = input("Ingresa el nuevo color HEX: ").strip() or "#FFFFFF"
+                nueva_leyenda = input("Ingresa la nueva leyenda: ").strip()
 
-                exito, mensaje = actualizar_producto(id_producto, nuevo_nombre, nuevo_precio)
+                exito, mensaje = actualizar_producto(
+                    id_producto, nuevo_nombre, nuevo_precio, nuevo_color, nueva_leyenda
+                )
                 print(mensaje)
             except ValueError:
                 print("Debes ingresar un número válido.")

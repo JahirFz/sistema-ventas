@@ -13,9 +13,10 @@ from controllers.cliente_controller import listar_clientes
 from controllers.pago_controller import obtener_estado_venta
 
 class VentaFrame(tb.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, abrir_detalle_venta=None):
         super().__init__(parent, style="App.TFrame")
 
+        self.abrir_detalle_venta = abrir_detalle_venta
         self.id_venta_seleccionada = None
         self.clientes_dict = {}
         self._todas_las_ventas = []
@@ -40,7 +41,8 @@ class VentaFrame(tb.Frame):
     def crear_formulario(self):
         contenedor = tb.Frame(self, padding=20, style="Surface.TFrame")
         contenedor.grid(row=0, column=0, sticky="ew", pady=(0, 15))
-        contenedor.grid_columnconfigure(1, weight=1)
+        for columna in (1, 2, 3, 4):
+            contenedor.grid_columnconfigure(columna, weight=1)
 
         tb.Label(
             contenedor,
@@ -54,7 +56,7 @@ class VentaFrame(tb.Frame):
 
         tb.Label(contenedor, text="Cliente").grid(row=1, column=2, sticky=W, padx=(0, 10))
         self.combo_clientes = ttk.Combobox(contenedor, state="readonly", width=30)
-        self.combo_clientes.grid(row=1, column=2, sticky=W, padx=(0, 10))
+        self.combo_clientes.grid(row=1, column=3, sticky="ew", padx=(0, 10))
 
         self.var_factura = tb.IntVar(value=0)
         self.check_factura = tb.Checkbutton(
@@ -63,28 +65,28 @@ class VentaFrame(tb.Frame):
             variable=self.var_factura,
             bootstyle="round-toggle"
         )
-        self.check_factura.grid(row=1, column=4, sticky=W, padx=(0, 10))
+        self.check_factura.grid(row=1, column=4, sticky="ew", padx=(0, 10))
 
         tb.Button(
             contenedor,
             text="Guardar",
             bootstyle="success",
             command=self.guardar_venta
-        ).grid(row=1, column=5, padx=5)
+        ).grid(row=1, column=5, padx=5, pady=4)
 
         tb.Button(
             contenedor,
             text="Actualizar",
             bootstyle="warning",
             command=self.editar_venta
-        ).grid(row=1, column=6, padx=5)
+        ).grid(row=1, column=6, padx=5, pady=4)
 
         tb.Button(
             contenedor,
             text="Limpiar",
             bootstyle="secondary",
             command=self.limpiar_formulario
-        ).grid(row=1, column=7, padx=5)
+        ).grid(row=1, column=7, padx=5, pady=4)
 
     def crear_buscador(self):
         marco = tb.Frame(self, padding=16, style="Surface.TFrame")
@@ -129,10 +131,10 @@ class VentaFrame(tb.Frame):
 
         self.tabla.column("id_venta", width=70, anchor=CENTER)
         self.tabla.column("fecha", width=120, anchor=CENTER)
-        self.tabla.column("cliente", width=300, anchor=CENTER)
+        self.tabla.column("cliente", width=260, anchor=W, stretch=True)
         self.tabla.column("factura", width=100, anchor=CENTER)
-        self.tabla.column("total", width=120, anchor=CENTER)
-        self.tabla.column("estado", width=120, anchor=CENTER)
+        self.tabla.column("total", width=110, anchor=CENTER)
+        self.tabla.column("estado", width=110, anchor=CENTER)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)
@@ -144,6 +146,7 @@ class VentaFrame(tb.Frame):
         marco_tabla.grid_columnconfigure(0, weight=1)
 
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_venta)
+        self.tabla.bind("<Double-1>", self.abrir_detalle_desde_tabla)
 
         self.tabla.tag_configure("pagada", background="#d1f7d6")
         self.tabla.tag_configure("abonada", background="#fff3cd")
@@ -259,6 +262,20 @@ class VentaFrame(tb.Frame):
                 break
 
         self.var_factura.set(1 if valores[3] == "Sí" else 0)
+
+    def abrir_detalle_desde_tabla(self, event):
+        item = self.tabla.identify_row(event.y)
+        if not item:
+            return
+
+        self.tabla.selection_set(item)
+        self.tabla.focus(item)
+        self.seleccionar_venta(None)
+
+        if self.id_venta_seleccionada is None or self.abrir_detalle_venta is None:
+            return
+
+        self.abrir_detalle_venta(self.id_venta_seleccionada)
 
     def editar_venta(self):
         if self.id_venta_seleccionada is None:

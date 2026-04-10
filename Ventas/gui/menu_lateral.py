@@ -5,7 +5,7 @@ from gui.ui_styles import PALETTE
 
 class MenuLateral(tb.Frame):
     def __init__(self, parent, comando_cambiar_vista):
-        super().__init__(parent, width=260, padding=20, style="Sidebar.TFrame")
+        super().__init__(parent, width=220, padding=16, style="Sidebar.TFrame")
         self.grid_propagate(False)
         self.comando_cambiar_vista = comando_cambiar_vista
         self.botones = {}
@@ -30,6 +30,7 @@ class MenuLateral(tb.Frame):
             ("Ventas", "ventas"),
             ("Detalle ventas", "detalle_ventas"),
             ("Pagos", "pagos"),
+            ("Consultas", "consultas"),
         ]
 
         for texto, vista in botones:

@@ -2,8 +2,22 @@ import os
 from datetime import date, timedelta
 from calendar import monthrange
 from openpyxl import Workbook
+from openpyxl.styles import PatternFill
 from config.database import conectar
 from controllers.pago_controller import obtener_estado_venta
+
+COLOR_NAMES = {
+    "#FFFFFF": "Blanco",
+    "#FACC15": "Amarillo",
+    "#EF4444": "Rojo",
+    "#3B82F6": "Azul",
+    "#22C55E": "Verde",
+    "#6B7280": "Gris",
+    "#BFC1C2": "Silver Vein",
+    "#F97316": "Naranja",
+    "#7F1D1D": "Vino",
+    "#8B5E3C": "Cafe",
+}
 
 
 def crear_carpeta_exports():
@@ -123,6 +137,83 @@ def ajustar_ancho_columnas(ws):
         ws.column_dimensions[letra_columna].width = max_length + 2
 
 
+def obtener_color_nombre(color_hex):
+    return COLOR_NAMES.get((color_hex or "").upper(), color_hex or "")
+
+
+def obtener_consulta_producto_por_categoria(categoria, completado=0):
+    patron = f"%{categoria.lower()}%"
+
+    with conectar() as conexion:
+        cursor = conexion.execute(
+            """
+            SELECT
+                dv.id_detalle,
+                c.nombre,
+                p.nombre,
+                dv.cantidad,
+                dv.color,
+                dv.leyenda
+            FROM detalle_ventas dv
+            INNER JOIN ventas v ON dv.id_venta = v.id_venta
+            INNER JOIN clientes c ON v.id_cliente = c.id_cliente
+            INNER JOIN productos p ON dv.id_producto = p.id_producto
+            WHERE LOWER(p.nombre) LIKE ? AND COALESCE(dv.completado, 0) = ?
+            ORDER BY c.nombre, p.nombre, dv.id_detalle
+            """,
+            (patron, 1 if completado else 0),
+        )
+        filas = cursor.fetchall()
+
+    return [
+        {
+            "id_detalle": fila[0],
+            "cliente": fila[1],
+            "producto": fila[2],
+            "cantidad": fila[3],
+            "color_hex": fila[4],
+            "color": obtener_color_nombre(fila[4]),
+            "leyenda": fila[5],
+        }
+        for fila in filas
+    ]
+
+
+def exportar_consulta_producto(categoria, completado=0):
+    crear_carpeta_exports()
+    registros = obtener_consulta_producto_por_categoria(categoria, completado=completado)
+
+    wb = Workbook()
+    ws = wb.active
+    sufijo_hoja = "Completados" if completado else "Pendientes"
+    ws.title = f"{categoria.capitalize()} {sufijo_hoja}"
+    ws.append(["Cliente", "Producto", "Cantidad", "Color", "Leyenda"])
+
+    for registro in registros:
+        ws.append([
+            registro["cliente"],
+            registro["producto"],
+            registro["cantidad"],
+            registro["color"],
+            registro["leyenda"],
+        ])
+        fila_actual = ws.max_row
+        color_hex = (registro["color_hex"] or "#FFFFFF").replace("#", "")
+        ws.cell(row=fila_actual, column=4).fill = PatternFill(
+            fill_type="solid",
+            start_color=color_hex,
+            end_color=color_hex,
+        )
+
+    ajustar_ancho_columnas(ws)
+
+    sufijo_archivo = "completados" if completado else "pendientes"
+    nombre_archivo = f"consulta_{categoria.lower()}_{sufijo_archivo}.xlsx"
+    ruta_archivo = os.path.join("exports", nombre_archivo)
+    wb.save(ruta_archivo)
+    return ruta_archivo
+
+
 def exportar_reporte_excel(tipo_reporte, fecha_inicio, fecha_fin):
     crear_carpeta_exports()
 
@@ -199,3 +290,11 @@ def exportar_reporte_semanal():
 def exportar_reporte_mensual():
     fecha_inicio, fecha_fin = obtener_rango_mensual()
     return exportar_reporte_excel("Mensual", fecha_inicio, fecha_fin)
+
+
+def exportar_consulta_sillas(completado=0):
+    return exportar_consulta_producto("silla", completado=completado)
+
+
+def exportar_consulta_mesas(completado=0):
+    return exportar_consulta_producto("mesa", completado=completado)

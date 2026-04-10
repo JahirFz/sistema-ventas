@@ -16,9 +16,10 @@ from controllers.pago_controller import (
 
 
 class PagoFrame(tb.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, abrir_detalle_venta=None):
         super().__init__(parent, style="App.TFrame")
 
+        self.abrir_detalle_venta = abrir_detalle_venta
         self.id_pago_seleccionado = None
         self.ventas_dict = {}
 
@@ -34,7 +35,8 @@ class PagoFrame(tb.Frame):
     def crear_formulario(self):
         contenedor = tb.Frame(self, padding=20, style="Surface.TFrame")
         contenedor.grid(row=0, column=0, sticky="ew", pady=(0, 15))
-        contenedor.grid_columnconfigure(1, weight=1)
+        for columna in (1, 3, 5):
+            contenedor.grid_columnconfigure(columna, weight=1)
 
         tb.Label(
             contenedor,
@@ -44,7 +46,7 @@ class PagoFrame(tb.Frame):
 
         tb.Label(contenedor, text="Venta").grid(row=1, column=0, sticky=W, padx=(0, 10))
         self.combo_ventas = ttk.Combobox(contenedor, state="readonly", width=40)
-        self.combo_ventas.grid(row=1, column=1, sticky=W, padx=(0, 10))
+        self.combo_ventas.grid(row=1, column=1, sticky="ew", padx=(0, 10))
         self.combo_ventas.bind("<<ComboboxSelected>>", self.cambio_venta)
 
         tb.Label(contenedor, text="Fecha").grid(row=1, column=2, sticky=W, padx=(0, 10))
@@ -57,7 +59,7 @@ class PagoFrame(tb.Frame):
 
         tb.Label(contenedor, text="Método").grid(row=2, column=0, sticky=W, padx=(0, 10), pady=(10, 0))
         self.entry_metodo = tb.Entry(contenedor, width=20)
-        self.entry_metodo.grid(row=2, column=1, sticky=W, padx=(0, 10), pady=(10, 0))
+        self.entry_metodo.grid(row=2, column=1, sticky="ew", padx=(0, 10), pady=(10, 0))
 
         tb.Button(
             contenedor,
@@ -72,6 +74,13 @@ class PagoFrame(tb.Frame):
             bootstyle="secondary",
             command=self.limpiar_formulario
         ).grid(row=2, column=3, padx=5, pady=(10, 0))
+
+        tb.Button(
+            contenedor,
+            text="Ir a detalles",
+            bootstyle="info",
+            command=self.ir_a_detalles
+        ).grid(row=2, column=4, padx=5, pady=(10, 0))
 
     def crear_resumen(self):
         marco = tb.Labelframe(self, text="Resumen de la venta", padding=15, bootstyle="info")
@@ -95,6 +104,8 @@ class PagoFrame(tb.Frame):
             bootstyle="danger"
         )
         self.lbl_estado.grid(row=0, column=3, sticky=W, padx=10)
+        for columna in range(4):
+            marco.grid_columnconfigure(columna, weight=1)
 
     def crear_tabla(self):
         marco_tabla = tb.Frame(self, padding=12, style="Surface.TFrame")
@@ -117,7 +128,7 @@ class PagoFrame(tb.Frame):
         self.tabla.column("id_pago", width=80, anchor=CENTER)
         self.tabla.column("fecha", width=120, anchor=CENTER)
         self.tabla.column("monto", width=120, anchor=CENTER)
-        self.tabla.column("metodo", width=200, anchor=CENTER)
+        self.tabla.column("metodo", width=200, anchor=W, stretch=True)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)
@@ -171,6 +182,17 @@ class PagoFrame(tb.Frame):
         elif valores_combo:
             self.combo_ventas.set(valores_combo[0])
 
+    def seleccionar_venta_por_id(self, id_venta):
+        self.cargar_ventas()
+
+        for texto, venta_id in self.ventas_dict.items():
+            if venta_id == id_venta:
+                self.combo_ventas.set(texto)
+                self.cambio_venta()
+                return True
+
+        return False
+
     def obtener_id_venta_actual(self):
         venta_seleccionada = self.combo_ventas.get().strip()
         if venta_seleccionada == "":
@@ -219,7 +241,7 @@ class PagoFrame(tb.Frame):
         self.lbl_saldo.config(text=f"Saldo pendiente: ${saldo_pendiente:.2f}")
         self.aplicar_estilo_estado(estado)
 
-    def cambio_venta(self, event):
+    def cambio_venta(self, event=None):
         self.id_pago_seleccionado = None
         self.cargar_pagos_actuales()
         self.actualizar_resumen()
@@ -244,6 +266,17 @@ class PagoFrame(tb.Frame):
             self.actualizar_resumen()
         else:
             messagebox.showerror("Error", mensaje)
+
+    def ir_a_detalles(self):
+        id_venta = self.obtener_id_venta_actual()
+        if id_venta is None:
+            messagebox.showwarning("Aviso", "Selecciona una venta.")
+            return
+
+        if self.abrir_detalle_venta is None:
+            return
+
+        self.abrir_detalle_venta(id_venta)
 
     def seleccionar_pago(self, event):
         item = self.tabla.selection()

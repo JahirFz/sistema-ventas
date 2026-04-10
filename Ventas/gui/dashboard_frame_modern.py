@@ -9,6 +9,8 @@ from controllers.dashboard_controller import (
     obtener_total_ventas,
 )
 from controllers.reporte_controller import (
+    exportar_consulta_mesas,
+    exportar_consulta_sillas,
     exportar_reporte_mensual,
     exportar_reporte_semanal,
 )
@@ -78,12 +80,14 @@ class DashboardFrame(tb.Frame):
         acciones.grid(row=2, column=0, sticky="ew", pady=(18, 0))
         acciones.grid_columnconfigure(0, weight=1)
         acciones.grid_columnconfigure(1, weight=1)
+        acciones.grid_columnconfigure(2, weight=1)
+        acciones.grid_columnconfigure(3, weight=1)
 
         tb.Label(
             acciones,
             text="Reportes de ingresos semanales y mensuales.",
             style="SectionSubtitle.TLabel",
-        ).grid(row=1, column=0, columnspan=2, sticky=W, pady=(4, 16))
+        ).grid(row=1, column=0, columnspan=4, sticky=W, pady=(4, 16))
 
         tb.Button(
             acciones,
@@ -97,7 +101,21 @@ class DashboardFrame(tb.Frame):
             text="Exportar reporte mensual",
             bootstyle="primary",
             command=self.exportar_reporte_mensual_gui,
-        ).grid(row=2, column=1, sticky="ew", padx=(8, 0))
+        ).grid(row=2, column=1, sticky="ew", padx=8)
+
+        tb.Button(
+            acciones,
+            text="Consulta de sillas",
+            bootstyle="info",
+            command=self.exportar_consulta_sillas_gui,
+        ).grid(row=2, column=2, sticky="ew", padx=8)
+
+        tb.Button(
+            acciones,
+            text="Consulta de mesas",
+            bootstyle="warning",
+            command=self.exportar_consulta_mesas_gui,
+        ).grid(row=2, column=3, sticky="ew", padx=(8, 0))
 
     def crear_tarjeta(self, parent, row, column, titulo, valor, estilo):
         card = tb.Frame(parent, padding=20, style=f"{estilo}.TFrame")
@@ -136,3 +154,17 @@ class DashboardFrame(tb.Frame):
             messagebox.showinfo("Exito", f"Reporte mensual exportado correctamente en:\n{ruta}")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo exportar el reporte mensual.\n{e}")
+
+    def exportar_consulta_sillas_gui(self):
+        try:
+            ruta = exportar_consulta_sillas()
+            messagebox.showinfo("Exito", f"Consulta de sillas exportada correctamente en:\n{ruta}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo exportar la consulta de sillas.\n{e}")
+
+    def exportar_consulta_mesas_gui(self):
+        try:
+            ruta = exportar_consulta_mesas()
+            messagebox.showinfo("Exito", f"Consulta de mesas exportada correctamente en:\n{ruta}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo exportar la consulta de mesas.\n{e}")

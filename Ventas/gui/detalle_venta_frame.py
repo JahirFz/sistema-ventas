@@ -3,7 +3,7 @@ from ttkbootstrap.constants import *
 from tkinter import ttk, messagebox
 
 from controllers.venta_controller import listar_ventas
-from controllers.producto_controller import listar_productos
+from controllers.producto_controller_v2 import listar_productos
 from controllers.detalle_venta_controller import (
     agregar_detalle_venta,
     listar_detalle_por_venta,

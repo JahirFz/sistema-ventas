@@ -1,8 +1,9 @@
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
-from tkinter import ttk, messagebox
+import tkinter as tk
+from tkinter import ttk, messagebox, colorchooser
 
-from controllers.producto_controller import (
+from controllers.producto_controller_v2 import (
     agregar_producto,
     listar_productos,
     actualizar_producto,
@@ -16,6 +17,7 @@ class ProductoFrame(tb.Frame):
 
         self.id_producto_seleccionado = None
         self._todos_los_productos = []
+        self.color_actual = "#FFFFFF"
  
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -47,26 +49,54 @@ class ProductoFrame(tb.Frame):
         self.entry_precio = tb.Entry(contenedor, width=15)
         self.entry_precio.grid(row=1, column=3, sticky=W, padx=(0, 10))
 
+        tb.Label(contenedor, text="Color").grid(row=1, column=4, sticky=W, padx=(0, 10))
+        color_frame = tb.Frame(contenedor, style="Surface.TFrame")
+        color_frame.grid(row=1, column=5, sticky=W, padx=(0, 10))
+
+        self.preview_color = tk.Label(
+            color_frame,
+            bg=self.color_actual,
+            width=3,
+            height=1,
+            relief="solid",
+            bd=1
+        )
+        self.preview_color.pack(side=LEFT, padx=(0, 8))
+
+        self.lbl_color = tb.Label(color_frame, text=self.color_actual)
+        self.lbl_color.pack(side=LEFT, padx=(0, 8))
+
         tb.Button(
-            contenedor,
-            text="Guardar",
-            bootstyle="success",
-            command=self.guardar_producto
-        ).grid(row=1, column=4, padx=5)
+            color_frame,
+            text="Elegir color",
+            bootstyle="info-outline",
+            command=self.seleccionar_color
+        ).pack(side=LEFT)
 
         tb.Button(
             contenedor,
             text="Actualizar",
             bootstyle="warning",
             command=self.editar_producto
-        ).grid(row=1, column=5, padx=5)
+        ).grid(row=1, column=7, padx=5)
+
+        tb.Label(contenedor, text="Leyenda").grid(row=2, column=0, sticky=W, padx=(0, 10), pady=(12, 0))
+        self.entry_leyenda = tb.Entry(contenedor)
+        self.entry_leyenda.grid(row=2, column=1, columnspan=4, sticky="ew", padx=(0, 10), pady=(12, 0))
+
+        tb.Button(
+            contenedor,
+            text="Guardar",
+            bootstyle="success",
+            command=self.guardar_producto
+        ).grid(row=2, column=5, padx=5, pady=(12, 0))
 
         tb.Button(
             contenedor,
             text="Limpiar",
             bootstyle="secondary",
             command=self.limpiar_formulario
-        ).grid(row=1, column=6, padx=5)
+        ).grid(row=2, column=6, padx=5, pady=(12, 0))
 
     def crear_buscador(self):
         marco = tb.Frame(self, padding=16, style="Surface.TFrame")
@@ -93,7 +123,7 @@ class ProductoFrame(tb.Frame):
         marco_tabla = tb.Frame(self, padding=12, style="Surface.TFrame")
         marco_tabla.grid(row=2, column=0, sticky="nsew")
 
-        columnas = ("id_producto", "nombre", "precio")
+        columnas = ("id_producto", "nombre", "precio", "color", "leyenda")
 
         self.tabla = ttk.Treeview(
             marco_tabla,
@@ -105,10 +135,14 @@ class ProductoFrame(tb.Frame):
         self.tabla.heading("id_producto", text="ID")
         self.tabla.heading("nombre", text="Nombre")
         self.tabla.heading("precio", text="Precio")
+        self.tabla.heading("color", text="Color")
+        self.tabla.heading("leyenda", text="Leyenda")
 
         self.tabla.column("id_producto", width=80, anchor=CENTER)
-        self.tabla.column("nombre", width=400, anchor=CENTER)
+        self.tabla.column("nombre", width=220, anchor=CENTER)
         self.tabla.column("precio", width=120, anchor=CENTER)
+        self.tabla.column("color", width=120, anchor=CENTER)
+        self.tabla.column("leyenda", width=260, anchor=W)
 
         scrollbar = ttk.Scrollbar(marco_tabla, orient=VERTICAL, command=self.tabla.yview)
         self.tabla.configure(yscrollcommand=scrollbar.set)
@@ -139,7 +173,14 @@ class ProductoFrame(tb.Frame):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
         for producto in productos:
-            self.tabla.insert("", END, values=(producto[0], producto[1], f"${producto[2]:.2f}"))
+            tag = f"producto_{producto[0]}"
+            self.tabla.tag_configure(tag, background=producto[3])
+            self.tabla.insert(
+                "",
+                END,
+                values=(producto[0], producto[1], f"${producto[2]:.2f}", producto[3], producto[4]),
+                tags=(tag,)
+            )
     
     def _filtrar(self, *args):
         texto = self.var_busqueda.get().strip().lower()
@@ -149,7 +190,10 @@ class ProductoFrame(tb.Frame):
  
         filtrados = [
             p for p in self._todos_los_productos
-            if texto in str(p[0]).lower() or texto in p[1].lower()
+            if texto in str(p[0]).lower()
+            or texto in p[1].lower()
+            or texto in p[3].lower()
+            or texto in p[4].lower()
         ]
         self._actualizar_tabla(filtrados)
     
@@ -157,11 +201,22 @@ class ProductoFrame(tb.Frame):
         self.var_busqueda.set("")
         self.entry_busqueda.focus()
 
+    def seleccionar_color(self):
+        color = colorchooser.askcolor(color=self.color_actual, title="Selecciona un color")[1]
+        if color:
+            self.actualizar_color(color)
+
+    def actualizar_color(self, color):
+        self.color_actual = color.upper()
+        self.preview_color.configure(bg=self.color_actual)
+        self.lbl_color.configure(text=self.color_actual)
+
     def guardar_producto(self):
         nombre = self.entry_nombre.get().strip()
         precio = self.entry_precio.get().strip()
+        leyenda = self.entry_leyenda.get().strip()
 
-        exito, mensaje = agregar_producto(nombre, precio)
+        exito, mensaje = agregar_producto(nombre, precio, self.color_actual, leyenda)
 
         if exito:
             messagebox.showinfo("Éxito", mensaje)
@@ -184,6 +239,9 @@ class ProductoFrame(tb.Frame):
         precio_limpio = str(valores[2]).replace("$", "").strip()
         self.entry_precio.delete(0, END)
         self.entry_precio.insert(0, precio_limpio)
+        self.entry_leyenda.delete(0, END)
+        self.entry_leyenda.insert(0, valores[4])
+        self.actualizar_color(valores[3])
 
     def editar_producto(self):
         if self.id_producto_seleccionado is None:
@@ -192,11 +250,14 @@ class ProductoFrame(tb.Frame):
 
         nuevo_nombre = self.entry_nombre.get().strip()
         nuevo_precio = self.entry_precio.get().strip()
+        nueva_leyenda = self.entry_leyenda.get().strip()
 
         exito, mensaje = actualizar_producto(
             self.id_producto_seleccionado,
             nuevo_nombre,
-            nuevo_precio
+            nuevo_precio,
+            self.color_actual,
+            nueva_leyenda
         )
 
         if exito:
@@ -228,4 +289,6 @@ class ProductoFrame(tb.Frame):
         self.id_producto_seleccionado = None
         self.entry_nombre.delete(0, END)
         self.entry_precio.delete(0, END)
+        self.entry_leyenda.delete(0, END)
+        self.actualizar_color("#FFFFFF")
         self.tabla.selection_remove(self.tabla.selection())

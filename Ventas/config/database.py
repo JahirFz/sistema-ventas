@@ -25,9 +25,23 @@ def crear_tabla_productos():
             CREATE TABLE IF NOT EXISTS productos (
                 id_producto INTEGER PRIMARY KEY AUTOINCREMENT,
                 nombre TEXT NOT NULL,
-                precio REAL NOT NULL
+                precio REAL NOT NULL,
+                color TEXT NOT NULL DEFAULT '#FFFFFF',
+                leyenda TEXT NOT NULL DEFAULT ''
             )
         """)
+
+        columnas = {
+            fila[1] for fila in conexion.execute("PRAGMA table_info(productos)").fetchall()
+        }
+        if "color" not in columnas:
+            conexion.execute(
+                "ALTER TABLE productos ADD COLUMN color TEXT NOT NULL DEFAULT '#FFFFFF'"
+            )
+        if "leyenda" not in columnas:
+            conexion.execute(
+                "ALTER TABLE productos ADD COLUMN leyenda TEXT NOT NULL DEFAULT ''"
+            )
 
 
 def crear_tabla_ventas():
@@ -43,6 +57,9 @@ def crear_tabla_ventas():
                 FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
             )
         """)
+        conexion.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ventas_cliente ON ventas(id_cliente)"
+        )
 
 
 def crear_tabla_detalle_ventas():
@@ -56,10 +73,38 @@ def crear_tabla_detalle_ventas():
                 cantidad INTEGER NOT NULL,
                 precio_unitario REAL NOT NULL,
                 subtotal REAL NOT NULL,
+                color TEXT NOT NULL DEFAULT '#FFFFFF',
+                leyenda TEXT NOT NULL DEFAULT '',
+                completado INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (id_venta) REFERENCES ventas(id_venta),
                 FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
             )
         """)
+
+        columnas = {
+            fila[1] for fila in conexion.execute("PRAGMA table_info(detalle_ventas)").fetchall()
+        }
+        if "color" not in columnas:
+            conexion.execute(
+                "ALTER TABLE detalle_ventas ADD COLUMN color TEXT NOT NULL DEFAULT '#FFFFFF'"
+            )
+        if "leyenda" not in columnas:
+            conexion.execute(
+                "ALTER TABLE detalle_ventas ADD COLUMN leyenda TEXT NOT NULL DEFAULT ''"
+            )
+        if "completado" not in columnas:
+            conexion.execute(
+                "ALTER TABLE detalle_ventas ADD COLUMN completado INTEGER NOT NULL DEFAULT 0"
+            )
+        conexion.execute(
+            "CREATE INDEX IF NOT EXISTS idx_detalle_venta_id_venta ON detalle_ventas(id_venta)"
+        )
+        conexion.execute(
+            "CREATE INDEX IF NOT EXISTS idx_detalle_venta_id_producto ON detalle_ventas(id_producto)"
+        )
+        conexion.execute(
+            "CREATE INDEX IF NOT EXISTS idx_detalle_venta_completado ON detalle_ventas(completado)"
+        )
 
 
 def crear_tabla_pagos():
@@ -75,3 +120,6 @@ def crear_tabla_pagos():
                 FOREIGN KEY (id_venta) REFERENCES ventas(id_venta)
             )
         """)
+        conexion.execute(
+            "CREATE INDEX IF NOT EXISTS idx_pagos_id_venta ON pagos(id_venta)"
+        )
